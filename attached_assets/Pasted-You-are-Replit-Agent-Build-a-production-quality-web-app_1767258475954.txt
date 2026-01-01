@@ -1,0 +1,140 @@
+You are Replit Agent. Build a production-quality web app called “SabrSpace” using the most up-to-date stable versions available at install time.
+
+GOAL
+SabrSpace lets a logged-in user create multiple “Question Sets” and generate a unique shareable link for someone to answer. The responder opens the link, enters their name, optionally accepts a respectful Islamic truth attestation, answers questions, submits, and the creator gets dashboard notifications and can view responses. The site is fully bilingual: Bangla + English.
+
+TECH STACK (must use)
+- Next.js (App Router) + TypeScript
+- Tailwind CSS
+- shadcn/ui (or equivalent modern component library) + lucide-react icons
+- next-intl for i18n with route-based locales (/en, /bn)
+- Prisma ORM + database
+  - Use SQLite for local/Replit dev by default
+  - Keep it DATABASE_URL-driven so switching to Postgres is easy
+- Zod + react-hook-form for validation
+- Authentication:
+  - Implement a proven auth solution (NextAuth/next-auth or Better Auth, whichever is currently stable and simplest)
+  - Support at least email magic link OR Google OAuth
+  - Protect dashboard routes
+- Server Actions or Route Handlers for mutations (keep it clean + secure)
+
+CORE UX REQUIREMENTS
+Public pages
+1) Landing page (/en and /bn)
+   - premium Islamic-inspired design: subtle geometric pattern background (SVG/CSS), calm palette (deep green/teal + warm gold accents), soft gradients, clean typography
+   - clear CTA: “Create a Question Set”
+   - sections: How it works, Features, Privacy note, Footer
+2) How it works page
+3) Answer page: /s/[token]
+   Flow:
+   - Step A: Responder enters name (required unless “Anonymous allowed” is enabled for the set)
+   - Step B: If requireAttestation is ON: show checkbox with respectful pledge text (EN + BN)
+       EN default: “I testify in the name of Allah that I will answer truthfully.”
+       BN default: “আমি আল্লাহর নামে সাক্ষ্য দিচ্ছি যে আমি সত্যভাবে উত্তর দেব।”
+     IMPORTANT: keep wording respectful and optional by creator toggle; no harsh or coercive language.
+   - Step C: Questions form with progress indicator
+   - Step D: Submit → success confirmation
+   Extras:
+   - Draft autosave in localStorage (optional)
+   - Prevent duplicate submissions unless set allows multiple
+   - Increment “views” when page is opened
+
+Authenticated pages (dashboard)
+1) /dashboard
+   - overview cards for each question set
+   - stats per set: views, responses count, last response time
+   - notification badge: “New responses”
+2) /dashboard/sets/new
+   - Create set wizard:
+     Step 1: details (title, description, default locale EN/BN, isOpen, requireAttestation, allowAnonymous, allowMultipleSubmissions)
+     Step 2: add/edit/reorder questions
+        - Question types: TEXT and CHOICE
+        - Support required/optional questions
+        - Drag & drop reorder if feasible
+     Step 3: publish → show share link + copy button + QR code
+3) /dashboard/sets/[id]
+   - edit set details, questions, toggles
+   - close/open set
+   - regenerate token (invalidate old link)
+4) /dashboard/sets/[id]/responses
+   - list responders (name, submittedAt, localeUsed)
+   - detail view for each response (clean readable layout)
+   - export CSV (bonus but preferred)
+
+DESIGN DIRECTION (“Extraordinary Islamic vibe”)
+- Premium, calm, minimal, NOT flashy
+- Subtle geometric / arabesque patterns (CSS/SVG) in backgrounds and separators
+- Tasteful “Bismillah”-inspired decorative header as simple typographic/shape element (do not paste copyrighted calligraphy images)
+- Microinteractions: hover lift on cards, smooth transitions, accessible focus states
+- Fully responsive and fast
+- Great typography:
+  - Use Noto Sans Bengali or Hind Siliguri for Bangla
+  - Use a readable Latin font for English
+  - Optional accent font (Amiri-like) only for decorative headings, keep body very readable
+
+INTERNATIONALIZATION (must be complete)
+- Use next-intl
+- Locale routes: /en/* and /bn/*
+- Provide a language switcher component that persists preference
+- Translate ALL UI strings (not partial)
+- Store localeUsed on each response
+
+DATA MODEL (Prisma)
+Implement these models (names can vary but must match functionality):
+- User
+- QuestionSet: id, userId, title, description, token, isOpen, requireAttestation, allowAnonymous, allowMultipleSubmissions, defaultLocale, views, createdAt, updatedAt
+- Question: id, setId, order, type(TEXT|CHOICE), prompt, optionsJson (for CHOICE), required
+- Response: id, setId, responderName (nullable if anonymous), attestationAcceptedAt (nullable), submittedAt, localeUsed
+- Answer: id, responseId, questionId, valueText (or valueJson)
+- Notification: id, userId, type (NEW_RESPONSE), entityId (setId or responseId), createdAt, readAt
+
+SECURITY & CORRECTNESS (non-negotiable)
+- Share tokens must be unguessable:
+  - generate with crypto-safe random (e.g., 24–32 bytes base64url)
+- Server-side validation with Zod
+- Access control:
+  - only owners can view/edit their sets and responses
+- Rate limit public submissions (simple IP-based throttle is fine)
+- Prevent XSS: do not allow HTML in questions/answers; escape output
+- Avoid storing sensitive unnecessary data (no long-term IP storage unless required for abuse prevention; keep minimal)
+- Handle closed sets gracefully (show “This set is closed”)
+- Good error states + loading skeletons
+
+IMPLEMENTATION DETAILS
+- Use App Router structure with clean folders:
+  - app/[locale]/(public)/...
+  - app/[locale]/(dashboard)/dashboard/...
+  - app/s/[token]/... (or locale-aware if you prefer; but share links should work regardless of locale; allow responder to choose language on the page)
+- Prefer Server Actions for create/update flows where practical
+- Provide reusable UI components: Navbar, Footer, LanguageSwitcher, SetCard, QuestionEditor, ResponseViewer
+- Use shadcn/ui for form fields, dialogs, toasts, tabs, badges, skeleton
+- Notifications:
+  - When a response is submitted, create a notification for set owner
+  - Show unread count in dashboard header
+  - Add “Mark all as read” (nice)
+
+REPLIT-READY SETUP (must include)
+- .env.example with all needed keys
+- README.md with:
+  - how to run
+  - how to set env vars
+  - prisma migrate steps
+  - how to switch to Postgres
+- Seed script:
+  - demo user + demo question set with 6–10 questions (mix of TEXT + CHOICE)
+- Ensure “Run” works in Replit immediately
+
+CONTENT SUGGESTIONS (matrimony use-case)
+- Provide a “Matrimony Starter Pack” template set creators can clone (optional but preferred)
+- Keep wording respectful and privacy-aware
+
+ACCEPTANCE TEST (must pass)
+1) I can sign in
+2) I can create a question set with multiple questions
+3) I get a share link and open it in incognito
+4) Responder enters name + optionally accepts attestation + submits answers
+5) Dashboard shows notification + I can view the response details
+6) I can switch EN/BN and everything is translated
+
+DELIVERABLE
+Generate the complete codebase with clean architecture, high-quality UI, and polished Islamic-inspired design. Make it feel like a real premium product. Provide final instructions to run it and a quick walkthrough of the main flows.
