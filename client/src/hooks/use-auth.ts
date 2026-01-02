@@ -1,47 +1,25 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { User } from "@shared/models/auth";
+import { useState } from "react";
 
-async function fetchUser(): Promise<User | null> {
-  const response = await fetch("/api/auth/user", {
-    credentials: "include",
-  });
-
-  if (response.status === 401) {
-    return null;
-  }
-
-  if (!response.ok) {
-    throw new Error(`${response.status}: ${response.statusText}`);
-  }
-
-  return response.json();
-}
-
-async function logout(): Promise<void> {
-  window.location.href = "/api/logout";
-}
+// Mock user for development without authentication
+const mockUser = {
+  id: "demo-user-id",
+  email: "demo@sabrspace.com",
+  firstName: "Demo",
+  lastName: "User",
+  profileImageUrl: null,
+};
 
 export function useAuth() {
-  const queryClient = useQueryClient();
-  const { data: user, isLoading } = useQuery<User | null>({
-    queryKey: ["/api/auth/user"],
-    queryFn: fetchUser,
-    retry: false,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-
-  const logoutMutation = useMutation({
-    mutationFn: logout,
-    onSuccess: () => {
-      queryClient.setQueryData(["/api/auth/user"], null);
-    },
-  });
+  const [user] = useState(mockUser);
 
   return {
     user,
-    isLoading,
-    isAuthenticated: !!user,
-    logout: logoutMutation.mutate,
-    isLoggingOut: logoutMutation.isPending,
+    isLoading: false,
+    isAuthenticated: true,
+    logout: () => {
+      // Mock logout - do nothing
+      console.log("Mock logout called");
+    },
+    isLoggingOut: false,
   };
 }
