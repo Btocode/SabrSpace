@@ -138,7 +138,7 @@ export function CreateSetForm() {
   const handleAnonymousSave = () => {
     console.log("Anonymous save clicked");
     if (!anonymousEmail.trim()) {
-      errorToast("Email Required", "Please enter an email address to save your question set");
+      errorToast(t("set.emailRequired"), t("set.emailRequired"));
       return;
     }
 
@@ -204,9 +204,9 @@ export function CreateSetForm() {
               <CheckCircle className="w-10 h-10 text-primary" />
             </div>
 
-            <h3 className="text-3xl font-bold mb-4 text-primary font-serif">Question Set Created!</h3>
+            <h3 className="text-3xl font-bold mb-4 text-primary font-serif">{t("set.savePrompt")}</h3>
             <p className="text-muted-foreground mb-6 text-lg">
-              Your question set has been saved successfully. Share this link with others to collect their responses.
+              {t("set.saveDesc")}
             </p>
 
             <div className="bg-primary/5 p-6 rounded-xl mb-6 border border-primary/20">
@@ -226,7 +226,7 @@ export function CreateSetForm() {
                     addToast({
                       type: "success",
                       title: "Copied!",
-                      description: "Link copied to clipboard",
+                      description: t("set.copied"),
                       duration: 2000
                     });
                   }}
@@ -269,9 +269,9 @@ export function CreateSetForm() {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <AlertCircle className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-primary font-serif">Save Your Question Set</h3>
+              <h3 className="text-xl font-bold mb-3 text-primary font-serif">{t("set.savePrompt")}</h3>
               <p className="text-muted-foreground leading-relaxed">
-                To save your question set and receive responses, please provide an email address or create an account.
+                {t("set.saveDesc")}
               </p>
             </div>
 
@@ -297,7 +297,7 @@ export function CreateSetForm() {
                   variant="outline"
                   className="flex-1 rounded-full"
                 >
-                  Cancel
+                  {t("set.cancel")}
                 </Button>
                 <Button
                   onClick={handleAnonymousSave}
@@ -312,7 +312,7 @@ export function CreateSetForm() {
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Save with Email
+                      {t("set.saveWithEmail")}
                     </>
                   )}
                 </Button>

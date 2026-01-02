@@ -34,11 +34,11 @@ export default function PublicResponse() {
     </div>
   );
 
-  if (error || !set) return (
-    <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">
-      Set not found or closed.
-    </div>
-  );
+    if (error || !set) return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">
+        {t("response.notFound")}
+      </div>
+    );
 
   const onSubmit = (data: any) => {
     const answers = set.questions.map((q: any) => ({
@@ -59,7 +59,7 @@ export default function PublicResponse() {
         addToast({
           type: "success",
           title: "JazakAllah Khair",
-          description: "Your response has been submitted successfully",
+          description: t("response.success"),
           duration: 4000
         });
         setSuccess(true);
@@ -92,7 +92,7 @@ export default function PublicResponse() {
             <h2 className="text-3xl font-bold font-serif text-primary">جزاك الله خيراً</h2>
             <p className="text-lg text-primary font-medium">JazakAllah Khair</p>
             <p className="text-muted-foreground leading-relaxed">
-              Your thoughtful response has been submitted successfully. May Allah reward you abundantly.
+              {t("response.success")}
             </p>
           </div>
 
@@ -103,7 +103,7 @@ export default function PublicResponse() {
               size="lg"
             >
               <Heart className="w-4 h-4 mr-2" />
-              Submit Another Response
+              {t("response.submitAnother")}
             </Button>
           </div>
         </motion.div>

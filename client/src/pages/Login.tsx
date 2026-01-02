@@ -17,6 +17,7 @@ import { motion } from "framer-motion";
 
 export default function Login() {
   const [, navigate] = useLocation();
+  const { t } = useLanguage();
   const {
     login,
     register,
@@ -83,9 +84,9 @@ export default function Login() {
                 <User className="w-8 h-8 text-primary" />
               </div>
               <CardTitle className="text-2xl font-bold text-primary">
-                Welcome to SabrSpace
+                {t("login.welcome")}
               </CardTitle>
-              <CardDescription>Choose how you'd like to continue</CardDescription>
+              <CardDescription>{t("login.choose")}</CardDescription>
             </CardHeader>
 
             <CardContent className="pt-6">
@@ -94,12 +95,11 @@ export default function Login() {
                 <div className="flex items-center gap-3 mb-3">
                   <Users className="w-5 h-5 text-primary" />
                   <h3 className="font-medium text-primary font-serif">
-                    Quick Start
+                    {t("login.quickStart")}
                   </h3>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Continue anonymously to explore and create question sets without
-                  signing up.
+                  {t("login.continueAnonymously")}
                 </p>
                 <Button
                   onClick={handleAnonymousLogin}
