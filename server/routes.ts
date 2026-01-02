@@ -181,8 +181,9 @@ export async function registerRoutes(
       const input = req.body;
       console.log('Biodata creation input:', JSON.stringify(input, null, 2));
 
+      let validatedInput;
       try {
-        const validatedInput = createBiodataSchema.parse(input);
+        validatedInput = createBiodataSchema.parse(input);
         console.log('Validated input:', validatedInput);
       } catch (validationErr: any) {
         console.error('Validation error:', validationErr.errors);
