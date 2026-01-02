@@ -58,7 +58,7 @@ export default function Dashboard() {
             <Card className="glass-panel border-none">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Sets
+                  {t("dashboard.totalSets")}
                 </CardTitle>
                 <Plus className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
@@ -74,7 +74,7 @@ export default function Dashboard() {
             <Card className="glass-panel border-none">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Responses
+                  {t("dashboard.totalResponses")}
                 </CardTitle>
                 <MessageCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
@@ -90,7 +90,7 @@ export default function Dashboard() {
             <Card className="glass-panel border-none">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Views
+                  {t("dashboard.totalViews")}
                 </CardTitle>
                 <Eye className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
@@ -139,7 +139,7 @@ export default function Dashboard() {
                           {set.title}
                         </Link>
                         {!set.isOpen && (
-                          <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">Closed</span>
+                          <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">{t("dashboard.closed")}</span>
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-1">{set.description}</p>
@@ -153,7 +153,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => copyLink(set.token)} title="Share">
+                      <Button variant="ghost" size="icon" onClick={() => copyLink(set.token)} title={t("dashboard.share")}>
                         <Share2 className="w-4 h-4 text-muted-foreground" />
                       </Button>
                       <DropdownMenu>
@@ -165,21 +165,21 @@ export default function Dashboard() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
                             <Link href={`/sets/${set.id}`} className="cursor-pointer">
-                              View Responses
+                              {t("dashboard.viewResponses")}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <a href={`/s/${set.token}`} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
                               <ExternalLink className="w-4 h-4 mr-2" />
-                              View Public Page
+                              {t("dashboard.viewPublicPage")}
                             </a>
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => deleteSet.mutate(set.id)}
                             className="text-destructive focus:text-destructive cursor-pointer"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
+                            {t("dashboard.delete")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
