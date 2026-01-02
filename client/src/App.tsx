@@ -12,6 +12,7 @@ import Dashboard from "@/pages/Dashboard";
 import CreateSet from "@/pages/CreateSet";
 import SetResponses from "@/pages/SetResponses";
 import PublicResponse from "@/pages/PublicResponse";
+import DemoWizard from "@/pages/DemoWizard";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -38,6 +39,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/demo" component={DemoWizard} />
       <Route path="/s/:token" component={PublicResponse} />
       
       {/* Protected Routes */}
@@ -61,8 +63,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <TooltipProvider>
-          <Router />
-          <Toaster />
+          <div className="min-h-screen bg-background text-foreground selection:bg-primary/20">
+            <Router />
+            <Toaster />
+          </div>
         </TooltipProvider>
       </LanguageProvider>
     </QueryClientProvider>
