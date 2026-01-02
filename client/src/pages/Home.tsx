@@ -24,7 +24,7 @@ export default function Home() {
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent-foreground font-medium text-sm mb-8 border border-accent/20">
                 <Heart className="w-4 h-4 fill-accent text-accent" />
-                <span className="text-foreground font-serif tracking-wide">Built for Ihsan</span>
+                <span className="text-foreground font-serif tracking-wide">{t("hero.badge")}</span>
               </div>
               
               <h1 className="text-5xl md:text-7xl font-bold text-primary mb-6 leading-tight">
@@ -65,21 +65,21 @@ export default function Home() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              {[
+              {              [
                 {
                   icon: <ShieldCheck className="w-8 h-8 text-teal-600" />,
-                  title: "Private & Secure",
-                  desc: "Your data is handled with Amanah (trust). Encrypted and secure by default."
+                  title: t("features.private.title"),
+                  desc: t("features.private.desc")
                 },
                 {
                   icon: <MessageSquare className="w-8 h-8 text-amber-600" />,
-                  title: "Honest Feedback",
-                  desc: "Optional anonymity encourages truthful, sincere answers from your community."
+                  title: t("features.honest.title"),
+                  desc: t("features.honest.desc")
                 },
                 {
                   icon: <Heart className="w-8 h-8 text-rose-500" />,
-                  title: "Clean Experience",
-                  desc: "No ads, no tracking, no distractions. Just pure conversation."
+                  title: t("features.clean.title"),
+                  desc: t("features.clean.desc")
                 }
               ].map((feature, i) => (
                 <motion.div
@@ -103,7 +103,7 @@ export default function Home() {
       </main>
 
       <footer className="py-8 text-center text-sm text-muted-foreground border-t border-border">
-        <p>&copy; {new Date().getFullYear()} SabrSpace. {t("footer.rights")}</p>
+        <p>&copy; {new Date().getFullYear()} {t("app.name")}. {t("footer.rights")}</p>
       </footer>
     </div>
   );
