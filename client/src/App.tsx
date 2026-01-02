@@ -15,6 +15,8 @@ import SetResponses from "@/pages/SetResponses";
 import PublicResponse from "@/pages/PublicResponse";
 import DemoWizard from "@/pages/DemoWizard";
 import Login from "@/pages/Login";
+import BiodataList from "@/pages/BiodataList";
+import BiodataWizard from "@/pages/BiodataWizard";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -58,6 +60,12 @@ function Router() {
       </Route>
       <Route path="/sets/:id">
         {() => <ProtectedRoute component={SetResponses} />}
+      </Route>
+      <Route path="/biodata">
+        {() => <ProtectedRoute component={BiodataList} />}
+      </Route>
+      <Route path="/biodata/create">
+        {() => <ProtectedRoute component={BiodataWizard} />}
       </Route>
 
       <Route component={NotFound} />

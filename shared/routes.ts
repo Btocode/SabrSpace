@@ -3,7 +3,9 @@ import {
   questionSets,
   questions,
   responses,
-  notifications
+  notifications,
+  biodata,
+  biodataReviews
 } from './schema';
 
 // === ERROR SCHEMAS ===
@@ -135,6 +137,110 @@ export const api = {
           totalResponses: z.number(),
           totalViews: z.number(),
         }),
+      },
+    },
+  },
+  // Biodata
+  biodata: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/biodata',
+      responses: {
+        200: z.array(z.custom<typeof biodata.$inferSelect>()),
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/biodata',
+      responses: {
+        201: z.custom<typeof biodata.$inferSelect>(),
+        400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+      },
+    },
+    get: {
+      method: 'GET' as const,
+      path: '/api/biodata/:id',
+      responses: {
+        200: z.custom<typeof biodata.$inferSelect>(),
+        404: errorSchemas.notFound,
+        403: errorSchemas.unauthorized,
+      },
+    },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/biodata/:id',
+      responses: {
+        200: z.custom<typeof biodata.$inferSelect>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+        403: errorSchemas.unauthorized,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/biodata/:id',
+      responses: {
+        204: z.void(),
+        403: errorSchemas.unauthorized,
+      },
+    },
+    publish: {
+      method: 'POST' as const,
+      path: '/api/biodata/:id/publish',
+      responses: {
+        200: z.custom<typeof biodata.$inferSelect>(),
+        400: errorSchemas.validation,
+        403: errorSchemas.unauthorized,
+      },
+    },
+    download: {
+      method: 'GET' as const,
+      path: '/api/biodata/:id/download',
+      responses: {
+        200: z.custom<any>(), // PDF buffer
+        404: errorSchemas.notFound,
+        403: errorSchemas.unauthorized,
+      },
+    },
+  },
+  // Public Biodata
+  publicBiodata: {
+    get: {
+      method: 'GET' as const,
+      path: '/api/public/biodata/:token',
+      responses: {
+        200: z.custom<typeof biodata.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+    download: {
+      method: 'GET' as const,
+      path: '/api/public/biodata/:token/download',
+      responses: {
+        200: z.custom<any>(), // PDF buffer
+        404: errorSchemas.notFound,
+      },
+    },
+  },
+  // Biodata Admin (for reviews)
+  biodataAdmin: {
+    pending: {
+      method: 'GET' as const,
+      path: '/api/admin/biodata/pending',
+      responses: {
+        200: z.array(z.custom<typeof biodata.$inferSelect>()),
+        403: errorSchemas.unauthorized,
+      },
+    },
+    review: {
+      method: 'POST' as const,
+      path: '/api/admin/biodata/:id/review',
+      responses: {
+        200: z.custom<typeof biodata.$inferSelect>(),
+        400: errorSchemas.validation,
+        403: errorSchemas.unauthorized,
+        404: errorSchemas.notFound,
       },
     },
   },

@@ -2,11 +2,12 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { 
-  LayoutDashboard, 
-  LogOut, 
-  PlusCircle, 
-  Languages 
+import {
+  LayoutDashboard,
+  LogOut,
+  PlusCircle,
+  Languages,
+  Heart
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -51,8 +52,8 @@ export function Navbar() {
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
               <Link href="/dashboard">
-                <Button 
-                  variant={location === "/dashboard" ? "secondary" : "ghost"} 
+                <Button
+                  variant={location === "/dashboard" ? "secondary" : "ghost"}
                   size="sm"
                   className="hidden md:flex"
                 >
@@ -60,10 +61,21 @@ export function Navbar() {
                   {t("nav.dashboard")}
                 </Button>
               </Link>
-              
+
+              <Link href="/biodata">
+                <Button
+                  variant={location.startsWith("/biodata") ? "secondary" : "ghost"}
+                  size="sm"
+                  className="hidden md:flex"
+                >
+                  <Heart className="w-4 h-4 mr-2" />
+                  Biodata
+                </Button>
+              </Link>
+
               <Link href="/create">
-                <Button 
-                  variant="default" 
+                <Button
+                  variant="default"
                   size="sm"
                   className="bg-primary text-primary-foreground hover:bg-primary/90 hidden md:flex"
                 >
@@ -88,6 +100,12 @@ export function Navbar() {
                     <Link href="/dashboard" className="cursor-pointer md:hidden">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       {t("nav.dashboard")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/biodata" className="cursor-pointer md:hidden">
+                      <Heart className="mr-2 h-4 w-4" />
+                      Biodata
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

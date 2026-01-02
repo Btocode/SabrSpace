@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { users, questionSets, questions } from "@shared/schema";
+import { users, questionSets, questions, createBiodataSchema } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { authenticateToken, optionalAuthenticateToken, authStorage } from "./auth";
@@ -142,6 +142,136 @@ export async function registerRoutes(
     const userId = getUserId(req);
     await storage.markNotificationsRead(userId);
     res.json({ success: true });
+  });
+
+  // === Biodata Routes ===
+
+  // Public biodata routes
+  app.get(api.publicBiodata.get.path, async (req, res) => {
+    const biodataEntry = await storage.getBiodataByToken(req.params.token);
+    if (!biodataEntry || biodataEntry.status !== 'published') {
+      return res.status(404).json({ message: "Biodata not found" });
+    }
+    res.json(biodataEntry);
+  });
+
+  // Protected biodata routes (allow anonymous users)
+  app.get(api.biodata.list.path, optionalAuthenticateToken, async (req, res) => {
+    const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    const biodataList = await storage.listBiodata(userId);
+    res.json(biodataList);
+  });
+
+  app.post(api.biodata.create.path, optionalAuthenticateToken, async (req, res) => {
+    try {
+      const userId = getUserId(req);
+      console.log('User ID from request:', userId);
+      console.log('User ID type:', typeof userId);
+      console.log('User ID truthy check:', !!userId);
+
+      if (!userId) {
+        console.log('No userId found, returning 401');
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Validate input using the schema
+      const input = req.body;
+      console.log('Biodata creation input:', JSON.stringify(input, null, 2));
+
+      try {
+        const validatedInput = createBiodataSchema.parse(input);
+        console.log('Validated input:', validatedInput);
+      } catch (validationErr: any) {
+        console.error('Validation error:', validationErr.errors);
+        return res.status(400).json({ message: "Validation error", errors: validationErr.errors });
+      }
+
+      console.log('Calling storage.createBiodata with userId:', userId);
+      const newBiodata = await storage.createBiodata(userId, validatedInput);
+      console.log('Biodata created successfully:', newBiodata);
+      res.status(201).json(newBiodata);
+    } catch (err: any) {
+      console.error('Biodata creation error:', err);
+      console.error('Error details:', err.message);
+      console.error('Error stack:', err.stack);
+      if (err.name === 'ZodError') {
+        return res.status(400).json({ message: "Validation error", errors: err.errors });
+      }
+      res.status(500).json({ message: "Internal server error", details: err.message });
+    }
+  });
+
+  app.get(api.biodata.get.path, optionalAuthenticateToken, async (req, res) => {
+    const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    const biodataEntry = await storage.getBiodata(Number(req.params.id));
+    if (!biodataEntry || biodataEntry.userId !== userId) {
+      return res.status(404).json({ message: "Biodata not found" });
+    }
+    res.json(biodataEntry);
+  });
+
+  app.patch(api.biodata.update.path, optionalAuthenticateToken, async (req, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      const input = req.body; // TODO: Add proper validation
+      const updatedBiodata = await storage.updateBiodata(Number(req.params.id), userId, input);
+      if (!updatedBiodata) return res.status(404).json({ message: "Biodata not found" });
+      res.json(updatedBiodata);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete(api.biodata.delete.path, optionalAuthenticateToken, async (req, res) => {
+    const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    await storage.deleteBiodata(Number(req.params.id), userId);
+    res.status(204).send();
+  });
+
+  app.post(api.biodata.publish.path, authenticateToken, async (req, res) => {
+    try {
+      const userId = getUserId(req);
+      const publishedBiodata = await storage.publishBiodata(Number(req.params.id), userId);
+      if (!publishedBiodata) return res.status(404).json({ message: "Biodata not found" });
+      res.json(publishedBiodata);
+    } catch (err: any) {
+      if (err.message === 'Authentication required for publishing biodata') {
+        return res.status(403).json({ message: err.message });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin routes for biodata review
+  app.get(api.biodataAdmin.pending.path, authenticateToken, async (req, res) => {
+    // TODO: Add admin role check
+    const pendingBiodata = await storage.getPendingBiodata();
+    res.json(pendingBiodata);
+  });
+
+  app.post(api.biodataAdmin.review.path, authenticateToken, async (req, res) => {
+    try {
+      // TODO: Add admin role check
+      const reviewerId = getUserId(req);
+      const { status, notes } = req.body;
+      const reviewedBiodata = await storage.reviewBiodata(Number(req.params.id), reviewerId, status, notes);
+      if (!reviewedBiodata) return res.status(404).json({ message: "Biodata not found" });
+      res.json(reviewedBiodata);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
   });
 
   // Seed data logic

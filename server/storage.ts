@@ -1,12 +1,12 @@
 import { 
   db 
 } from "./db";
-import { 
-  users, questionSets, questions, responses, answers, notifications,
-  type User, type QuestionSet, type Question, type Response, type Answer, type Notification,
-  type InsertUser, type InsertQuestionSet, type InsertQuestion, type InsertResponse, type InsertAnswer,
-  type CreateSetRequest, type UpdateSetRequest, type SubmitResponseRequest,
-  type QuestionSetWithQuestions, type ResponseWithDetails
+import {
+  users, questionSets, questions, responses, answers, notifications, biodata, biodataReviews,
+  type User, type QuestionSet, type Question, type Response, type Answer, type Notification, type Biodata, type BiodataReview,
+  type InsertUser, type InsertQuestionSet, type InsertQuestion, type InsertResponse, type InsertAnswer, type InsertBiodata, type InsertBiodataReview,
+  type CreateSetRequest, type UpdateSetRequest, type SubmitResponseRequest, type CreateBiodataRequest, type UpdateBiodataRequest, type PublishBiodataRequest,
+  type QuestionSetWithQuestions, type ResponseWithDetails, type BiodataWithDetails
 } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { randomBytes } from "crypto";
@@ -31,7 +31,18 @@ export interface IStorage {
   // Notifications
   getNotifications(userId: string): Promise<Notification[]>;
   markNotificationsRead(userId: string): Promise<void>;
-  
+
+  // Biodata
+  getBiodata(id: number): Promise<BiodataWithDetails | undefined>;
+  getBiodataByToken(token: string): Promise<Biodata | undefined>;
+  createBiodata(userId: string, data: CreateBiodataRequest): Promise<Biodata>;
+  updateBiodata(id: number, userId: string, data: UpdateBiodataRequest): Promise<Biodata | undefined>;
+  deleteBiodata(id: number, userId: string): Promise<void>;
+  listBiodata(userId: string): Promise<Biodata[]>;
+  publishBiodata(id: number, userId: string): Promise<Biodata | undefined>;
+  getPendingBiodata(): Promise<Biodata[]>;
+  reviewBiodata(id: number, reviewerId: string, status: string, notes?: string): Promise<Biodata | undefined>;
+
   // Internal
   incrementViews(setId: number): Promise<void>;
 }
@@ -246,6 +257,128 @@ export class DatabaseStorage implements IStorage {
     await db.update(questionSets)
       .set({ views: sql`${questionSets.views} + 1` })
       .where(eq(questionSets.id, setId));
+  }
+
+  // Biodata methods
+  async getBiodata(id: number): Promise<BiodataWithDetails | undefined> {
+    const biodataEntry = await db.query.biodata.findFirst({
+      where: eq(biodata.id, id),
+      with: {
+        user: true,
+        reviews: {
+          with: {
+            reviewer: true,
+          },
+        },
+        reviewer: true,
+      },
+    });
+    return biodataEntry as BiodataWithDetails | undefined;
+  }
+
+  async getBiodataByToken(token: string): Promise<Biodata | undefined> {
+    return await db.query.biodata.findFirst({
+      where: eq(biodata.token, token),
+    });
+  }
+
+  async createBiodata(userId: string, data: CreateBiodataRequest): Promise<Biodata> {
+    try {
+      console.log('Creating biodata for user:', userId);
+      console.log('Data received:', JSON.stringify(data, null, 2));
+
+      const token = randomBytes(16).toString('hex');
+      const insertData = {
+        ...data,
+        userId,
+        token,
+        status: 'draft',
+      };
+
+      console.log('Insert data:', JSON.stringify(insertData, null, 2));
+
+      const [newBiodata] = await db.insert(biodata).values(insertData).returning();
+      console.log('Biodata created successfully:', newBiodata.id);
+      return newBiodata;
+    } catch (error) {
+      console.error('Database error in createBiodata:', error);
+      throw error;
+    }
+  }
+
+  async updateBiodata(id: number, userId: string, data: UpdateBiodataRequest): Promise<Biodata | undefined> {
+    const [updated] = await db.update(biodata)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(biodata.id, id), eq(biodata.userId, userId)))
+      .returning();
+    return updated;
+  }
+
+  async deleteBiodata(id: number, userId: string): Promise<void> {
+    await db.delete(biodata)
+      .where(and(eq(biodata.id, id), eq(biodata.userId, userId)));
+  }
+
+  async listBiodata(userId: string): Promise<Biodata[]> {
+    return await db.select().from(biodata)
+      .where(eq(biodata.userId, userId))
+      .orderBy(desc(biodata.updatedAt));
+  }
+
+  async publishBiodata(id: number, userId: string): Promise<Biodata | undefined> {
+    // Only allow publishing if user is authenticated (not anonymous)
+    // Check if user has email (anonymous users don't)
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+
+    if (!user?.email) {
+      throw new Error('Authentication required for publishing biodata');
+    }
+
+    const [updated] = await db.update(biodata)
+      .set({
+        status: 'pending_review',
+        updatedAt: new Date()
+      })
+      .where(and(eq(biodata.id, id), eq(biodata.userId, userId)))
+      .returning();
+    return updated;
+  }
+
+  async getPendingBiodata(): Promise<Biodata[]> {
+    return await db.select().from(biodata)
+      .where(eq(biodata.status, 'pending_review'))
+      .orderBy(desc(biodata.createdAt));
+  }
+
+  async reviewBiodata(id: number, reviewerId: string, status: string, notes?: string): Promise<Biodata | undefined> {
+    // Start a transaction
+    const result = await db.transaction(async (tx) => {
+      // Update biodata status
+      const [updatedBiodata] = await tx.update(biodata)
+        .set({
+          status: status === 'approved' ? 'published' : 'rejected',
+          reviewedAt: new Date(),
+          reviewedBy: reviewerId,
+          reviewNotes: notes,
+          publishedAt: status === 'approved' ? new Date() : undefined,
+        })
+        .where(eq(biodata.id, id))
+        .returning();
+
+      // Create review record
+      await tx.insert(biodataReviews).values({
+        biodataId: id,
+        reviewerId,
+        status: status === 'approved' ? 'approved' : 'rejected',
+        notes: notes || '',
+      });
+
+      return updatedBiodata;
+    });
+
+    return result;
   }
 }
 
