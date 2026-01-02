@@ -1,9 +1,12 @@
 import { z } from 'zod';
-import {
-  questionSets,
-  questions,
-  responses,
-  notifications
+import { 
+  createSetSchema, 
+  updateSetSchema, 
+  submitResponseSchema, 
+  questionSets, 
+  questions, 
+  responses, 
+  notifications 
 } from './schema';
 
 // === ERROR SCHEMAS ===
@@ -38,6 +41,7 @@ export const api = {
     submitResponse: {
       method: 'POST' as const,
       path: '/api/public/sets/:token/submit',
+      input: submitResponseSchema,
       responses: {
         201: z.custom<any>(), // Response
         400: errorSchemas.validation,
@@ -57,6 +61,7 @@ export const api = {
     create: {
       method: 'POST' as const,
       path: '/api/sets',
+      input: createSetSchema,
       responses: {
         201: z.custom<any>(), // QuestionSetWithQuestions
         400: errorSchemas.validation,
@@ -75,6 +80,7 @@ export const api = {
     update: {
       method: 'PATCH' as const,
       path: '/api/sets/:id',
+      input: updateSetSchema,
       responses: {
         200: z.custom<any>(), // QuestionSetWithQuestions
         400: errorSchemas.validation,
