@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { MessageSquareQuote, Calendar, Globe } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 export default function SetResponses() {
   const [, params] = useRoute("/sets/:id");
