@@ -104,7 +104,7 @@ export function Navbar() {
               </DropdownMenu>
             </div>
           ) : (
-            <Button onClick={() => window.location.href = "/api/login"} variant="default" size="sm">
+            <Button onClick={() => window.location.href = "/login"} variant="default" size="sm">
               {t("nav.login")}
             </Button>
           )}
