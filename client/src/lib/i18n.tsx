@@ -123,7 +123,21 @@ const translations = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>("en");
+  // Initialize language from localStorage or default to "en"
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sabrspace-language');
+      return (saved === 'en' || saved === 'bn') ? saved : 'en';
+    }
+    return 'en';
+  });
+
+  const setLocale = (newLocale: Locale) => {
+    setLocaleState(newLocale);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sabrspace-language', newLocale);
+    }
+  };
 
   const t = (key: string) => {
     return (translations[locale] as any)[key] || key;
