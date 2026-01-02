@@ -24,7 +24,7 @@ export default function Home() {
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent-foreground font-medium text-sm mb-8 border border-accent/20">
                 <Heart className="w-4 h-4 fill-accent text-accent" />
-                <span className="text-accent-foreground/90 font-serif tracking-wide">Built for Ihsan</span>
+                <span className="text-foreground font-serif tracking-wide">Built for Ihsan</span>
               </div>
               
               <h1 className="text-5xl md:text-7xl font-bold text-primary mb-6 leading-tight">

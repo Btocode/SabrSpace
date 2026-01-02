@@ -5,14 +5,8 @@ import { relations } from "drizzle-orm";
 
 export * from "./models/auth";
 
-// === TABLE DEFINITIONS ===
-
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(), // Hashed password
-  createdAt: timestamp("created_at").defaultNow(),
-});
+// Import the users table for relations
+import { users } from "./models/auth";
 
 export const questionSets = pgTable("question_sets", {
   id: serial("id").primaryKey(),
@@ -43,6 +37,7 @@ export const questions = pgTable("questions", {
 export const responses = pgTable("responses", {
   id: serial("id").primaryKey(),
   setId: integer("set_id").notNull(),
+  userId: varchar("user_id"), // Nullable for anonymous responses
   responderName: text("responder_name"), // Nullable if anonymous
   attestationAcceptedAt: timestamp("attestation_accepted_at"),
   submittedAt: timestamp("submitted_at").defaultNow(),
@@ -94,6 +89,10 @@ export const responsesRelations = relations(responses, ({ one, many }) => ({
     fields: [responses.setId],
     references: [questionSets.id],
   }),
+  user: one(users, {
+    fields: [responses.userId],
+    references: [users.id],
+  }),
   answers: many(answers),
 }));
 
@@ -141,11 +140,10 @@ export type InsertAnswer = z.infer<typeof insertAnswerSchema>;
 
 // === API CONTRACT TYPES ===
 
-// Create Set Request (Includes questions)
-export const createSetSchema = insertQuestionSetSchema.extend({
-  questions: z.array(insertQuestionSchema)
-});
-export type CreateSetRequest = z.infer<typeof createSetSchema>;
+// Create Set Request (Includes questions, token generated internally)
+export type CreateSetRequest = Omit<InsertQuestionSet, 'id' | 'userId' | 'token' | 'views' | 'createdAt' | 'updatedAt'> & {
+  questions: Omit<InsertQuestion, 'id' | 'setId'>[];
+};
 
 // Update Set Request
 export const updateSetSchema = insertQuestionSetSchema.partial().extend({

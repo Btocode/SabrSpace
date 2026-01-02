@@ -1,6 +1,11 @@
 import { drizzle } from "drizzle-orm/node-postgres";
+// @ts-ignore - pg types are not properly exported for ESM
 import pg from "pg";
+import dotenv from "dotenv";
 import * as schema from "@shared/schema";
+
+// Load environment variables from .env file
+dotenv.config();
 
 const { Pool } = pg;
 

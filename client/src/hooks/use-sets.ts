@@ -1,14 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import { type QuestionSet, type CreateSetRequest, type UpdateSetRequest } from "@shared/schema";
-import { useToast } from "@/hooks/use-toast";
+import { successToast, errorToast } from "@/components/ui/toast-custom";
 
 // Fetch all sets for the user
 export function useSets() {
   return useQuery({
     queryKey: [api.sets.list.path],
     queryFn: async () => {
-      const res = await fetch(api.sets.list.path, { credentials: "include" });
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(api.sets.list.path, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       if (!res.ok) throw new Error("Failed to fetch sets");
       return api.sets.list.responses[200].parse(await res.json());
     },
@@ -20,8 +23,11 @@ export function useSet(id: number) {
   return useQuery({
     queryKey: [api.sets.get.path, id],
     queryFn: async () => {
+      const token = localStorage.getItem('auth_token');
       const url = buildUrl(api.sets.get.path, { id });
-      const res = await fetch(url, { credentials: "include" });
+      const res = await fetch(url, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       if (!res.ok) throw new Error("Failed to fetch set");
       return api.sets.get.responses[200].parse(await res.json());
     },
@@ -32,15 +38,17 @@ export function useSet(id: number) {
 // Create a new set
 export function useCreateSet() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (data: CreateSetRequest) => {
+      const token = localStorage.getItem('auth_token');
       const res = await fetch(api.sets.create.path, {
         method: api.sets.create.method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify(data),
-        credentials: "include",
       });
       if (!res.ok) {
         const error = await res.json();
@@ -50,10 +58,6 @@ export function useCreateSet() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.sets.list.path] });
-      toast({ title: "Success", description: "Question set created successfully" });
-    },
-    onError: (err) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
     },
   });
 }
@@ -61,16 +65,18 @@ export function useCreateSet() {
 // Update an existing set
 export function useUpdateSet() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateSetRequest }) => {
+      const token = localStorage.getItem('auth_token');
       const url = buildUrl(api.sets.update.path, { id });
       const res = await fetch(url, {
         method: api.sets.update.method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify(data),
-        credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to update set");
       return api.sets.update.responses[200].parse(await res.json());
@@ -78,10 +84,6 @@ export function useUpdateSet() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [api.sets.list.path] });
       queryClient.invalidateQueries({ queryKey: [api.sets.get.path, variables.id] });
-      toast({ title: "Success", description: "Question set updated" });
-    },
-    onError: (err) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
     },
   });
 }
@@ -89,20 +91,19 @@ export function useUpdateSet() {
 // Delete a set
 export function useDeleteSet() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (id: number) => {
+      const token = localStorage.getItem('auth_token');
       const url = buildUrl(api.sets.delete.path, { id });
       const res = await fetch(url, {
         method: api.sets.delete.method,
-        credentials: "include",
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error("Failed to delete set");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.sets.list.path] });
-      toast({ title: "Deleted", description: "Question set removed" });
     },
   });
 }

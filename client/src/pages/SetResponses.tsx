@@ -1,7 +1,6 @@
 import { useRoute } from "wouter";
-import { useSet, useSetResponses } from "@/hooks/use-responses"; // Wait, need correct imports
-import { useSet as useSetDetails } from "@/hooks/use-sets";
-import { useSetResponses as useResponsesList } from "@/hooks/use-responses";
+import { useSetResponses } from "@/hooks/use-responses";
+import { useSet } from "@/hooks/use-sets";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,8 +14,8 @@ export default function SetResponses() {
   const [, params] = useRoute("/sets/:id");
   const id = parseInt(params?.id || "0");
   
-  const { data: set, isLoading: setLoading } = useSetDetails(id);
-  const { data: responses, isLoading: responsesLoading } = useResponsesList(id);
+  const { data: set, isLoading: setLoading } = useSet(id);
+  const { data: responses, isLoading: responsesLoading } = useSetResponses(id);
 
   if (setLoading) return <div className="p-8"><Skeleton className="h-96 w-full" /></div>;
   if (!set) return <div>Not found</div>;

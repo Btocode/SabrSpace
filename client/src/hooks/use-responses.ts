@@ -47,8 +47,11 @@ export function useSetResponses(setId: number) {
   return useQuery({
     queryKey: [api.responses.list.path, setId],
     queryFn: async () => {
+      const token = localStorage.getItem('auth_token');
       const url = buildUrl(api.responses.list.path, { setId });
-      const res = await fetch(url, { credentials: "include" });
+      const res = await fetch(url, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       if (!res.ok) throw new Error("Failed to fetch responses");
       return api.responses.list.responses[200].parse(await res.json());
     },

@@ -22,7 +22,7 @@ export interface IStorage {
   regenerateToken(id: number, userId: string): Promise<string>;
 
   // Responses
-  submitResponse(token: string, data: SubmitResponseRequest): Promise<Response>;
+  submitResponse(token: string, data: SubmitResponseRequest, userId?: string): Promise<Response>;
   getResponses(setId: number, userId: string): Promise<ResponseWithDetails[]>;
   
   // Dashboard
@@ -77,9 +77,9 @@ export class DatabaseStorage implements IStorage {
         defaultLocale: data.defaultLocale,
       }).returning();
 
-      if (data.questions.length > 0) {
+      if (data.questions && (data.questions as any[]).length > 0) {
         await tx.insert(questions).values(
-          data.questions.map((q, idx) => ({
+          (data.questions as any[]).map((q, idx) => ({
             ...q,
             setId: newSet.id,
             order: idx,
@@ -112,9 +112,9 @@ export class DatabaseStorage implements IStorage {
         // Simple strategy: delete all and recreate for simplicity in this MVP
         // A better strategy would be to diff and update
         await tx.delete(questions).where(eq(questions.setId, id));
-        if (data.questions.length > 0) {
+        if (data.questions && (data.questions as any[]).length > 0) {
           await tx.insert(questions).values(
-            data.questions.map((q, idx) => ({
+            (data.questions as any[]).map((q, idx) => ({
               ...q,
               setId: id,
               order: idx,
@@ -155,7 +155,7 @@ export class DatabaseStorage implements IStorage {
     return newToken;
   }
 
-  async submitResponse(token: string, data: SubmitResponseRequest): Promise<Response> {
+  async submitResponse(token: string, data: SubmitResponseRequest, userId?: string): Promise<Response> {
     const set = await this.getQuestionSetByToken(token);
     if (!set) throw new Error("Set not found");
     if (!set.isOpen) throw new Error("Set is closed");
@@ -163,14 +163,15 @@ export class DatabaseStorage implements IStorage {
     return await db.transaction(async (tx) => {
       const [newResponse] = await tx.insert(responses).values({
         setId: set.id,
+        userId: userId || null,
         responderName: data.responderName,
         attestationAcceptedAt: data.attestationAcceptedAt ? new Date(data.attestationAcceptedAt) : null,
         localeUsed: data.localeUsed,
       }).returning();
 
-      if (data.answers.length > 0) {
+      if (data.answers && (data.answers as any[]).length > 0) {
         await tx.insert(answers).values(
-          data.answers.map(a => ({
+          (data.answers as any[]).map((a) => ({
             responseId: newResponse.id,
             questionId: a.questionId,
             value: a.value,
@@ -249,5 +250,5 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Important: authStorage is now handled by the integration
-export { authStorage, type IAuthStorage } from "./replit_integrations/auth";
+// Auth storage is now in server/auth/storage.ts
 export const storage = new DatabaseStorage();
