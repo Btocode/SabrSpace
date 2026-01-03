@@ -18,7 +18,10 @@ import {
   UserPlus,
   Heart,
   Users,
-  Globe
+  Globe,
+  FileText,
+  Crown,
+  Sparkles
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -135,12 +138,37 @@ export default function Dashboard() {
       )}
 
       <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Hero Welcome */}
+        <section className="mb-8">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-background to-amber-500/10 border border-primary/20 p-8">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-amber-500/5" />
+            <div className="relative">
+              <h1 className="text-3xl font-bold mb-4 font-serif text-foreground">{t("dashboard.welcome")}</h1>
+              <p className="text-muted-foreground mb-6 max-w-2xl">
+                Create meaningful connections through Islamic marriage. Build your biodata, share your journey, and connect with the community.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Button className="gap-2 rounded-full" asChild>
+                  <Link href="/biodata/create">
+                    <FileText className="w-4 h-4" />
+                    Create Biodata
+                  </Link>
+                </Button>
+                <Button variant="outline" className="gap-2 rounded-full" asChild>
+                  <Link href="/community">
+                    <Users className="w-4 h-4" />
+                    Join Community
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Stats Row */}
         <section>
-          <h1 className="text-3xl font-bold mb-6 font-serif text-foreground">{t("dashboard.welcome")}</h1>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="glass-panel border-none">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card className="glass-panel border-none rounded-2xl">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {t("dashboard.totalSets")}
@@ -156,7 +184,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="glass-panel border-none">
+            <Card className="glass-panel border-none rounded-2xl">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {t("dashboard.totalResponses")}
@@ -172,7 +200,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="glass-panel border-none">
+            <Card className="glass-panel border-none rounded-2xl">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {t("dashboard.totalViews")}
@@ -187,19 +215,128 @@ export default function Dashboard() {
                 )}
               </CardContent>
             </Card>
+
+            <Card className="glass-panel border-none rounded-2xl">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Biodatas
+                </CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-emerald-600">0</div>
+                <p className="text-xs text-muted-foreground mt-1">Create your first</p>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Feature Highlights */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold mb-6 font-serif">Islamic Marriage Features</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Biodata Feature */}
+            <Card className="overflow-hidden border-primary/20 rounded-2xl">
+              <CardContent className="p-0">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-amber-500/10" />
+                  <div className="relative p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                            <FileText className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground">Marriage Biodata</h3>
+                            <p className="text-xs text-muted-foreground">Create & share your profile</p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Build a comprehensive marriage biodata with Islamic values. Share with potential matches and download beautiful PDFs.
+                        </p>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <div className="inline-flex items-center gap-2 rounded-full bg-background/60 px-3 py-1 text-xs text-muted-foreground border border-border">
+                            <Crown className="h-3 w-3 text-amber-600" />
+                            Premium
+                          </div>
+                          <div className="inline-flex items-center gap-2 rounded-full bg-background/60 px-3 py-1 text-xs text-muted-foreground border border-border">
+                            <Sparkles className="h-3 w-3 text-primary" />
+                            AI Matching
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="rounded-full" asChild>
+                        <Link href="/biodata">View Biodatas</Link>
+                      </Button>
+                      <Button size="sm" className="rounded-full" asChild>
+                        <Link href="/biodata/create">Create Now</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Community Feature */}
+            <Card className="overflow-hidden border-primary/20 rounded-2xl">
+              <CardContent className="p-0">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-emerald-500/10" />
+                  <div className="relative p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                            <Users className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground">Community Hub</h3>
+                            <p className="text-xs text-muted-foreground">Connect & learn together</p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Join discussions, share experiences, and learn from the community. Get advice on Islamic marriage and relationships.
+                        </p>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <div className="inline-flex items-center gap-2 rounded-full bg-background/60 px-3 py-1 text-xs text-muted-foreground border border-border">
+                            <MessageCircle className="h-3 w-3 text-emerald-600" />
+                            Discussions
+                          </div>
+                          <div className="inline-flex items-center gap-2 rounded-full bg-background/60 px-3 py-1 text-xs text-muted-foreground border border-border">
+                            <Heart className="h-3 w-3 text-rose-500" />
+                            Support
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="rounded-full" asChild>
+                        <Link href="/community">Explore Community</Link>
+                      </Button>
+                      <Button variant="outline" size="sm" className="rounded-full text-emerald-600 border-emerald-600 hover:bg-emerald-50" asChild>
+                        <Link href="/community">Join Now</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
         {/* Sets List */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold font-serif">{t("dashboard.sets")}</h2>
-            <Link href="/create">
-              <Button>
+            <h2 className="text-2xl font-bold font-serif">Your Question Sets</h2>
+            <Button className="rounded-full" asChild>
+              <Link href="/create">
                 <Plus className="w-4 h-4 mr-2" />
                 {t("set.create")}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
 
           {setsLoading ? (
@@ -207,17 +344,33 @@ export default function Dashboard() {
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
             </div>
           ) : sets?.length === 0 ? (
-            <div className="text-center py-20 bg-card rounded-2xl border border-dashed">
-              <p className="text-muted-foreground mb-4">{t("dashboard.noSets")}</p>
-              <Link href="/create">
-                <Button variant="outline">{t("set.create")}</Button>
-              </Link>
-            </div>
+            <Card className="glass-panel border-dashed border-2 border-primary/20 rounded-2xl">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="text-center space-y-4">
+                  <div className="text-4xl">📝</div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold">No question sets yet</h3>
+                    <p className="text-muted-foreground text-sm max-w-sm">
+                      Create your first question set to start collecting responses from your community.
+                    </p>
+                  </div>
+                  <Button className="rounded-full" asChild>
+                    <Link href="/create">
+                      <Plus className="w-4 h-4 mr-2" />
+                      {t("set.create")}
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           ) : (
             <div className="grid gap-4">
               {sets?.map((set) => (
-                <Card key={set.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6 flex items-start justify-between gap-4">
+                <Card key={set.id} className="overflow-hidden border-primary/20 rounded-2xl hover:shadow-md transition-shadow">
+                  <CardContent className="p-0">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-amber-500/5" />
+                      <div className="relative p-6 flex items-start justify-between gap-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Link href={`/sets/${set.id}`} className="font-bold text-lg hover:text-primary hover:underline">
@@ -269,6 +422,8 @@ export default function Dashboard() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
+                    </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -279,7 +434,7 @@ export default function Dashboard() {
 
       {/* Anonymous User Upgrade Modal */}
       <Dialog open={showUpgradeModal} onOpenChange={closeUpgradeModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-primary" />
@@ -318,7 +473,7 @@ export default function Dashboard() {
             <div className="flex gap-3 pt-4">
               <Button
                 type="submit"
-                className="flex-1"
+                className="flex-1 rounded-full"
                 disabled={isConvertingAnonymous}
               >
                 {isConvertingAnonymous ? (
@@ -336,6 +491,7 @@ export default function Dashboard() {
               <Button
                 type="button"
                 variant="outline"
+                className="rounded-full"
                 onClick={closeUpgradeModal}
               >
                 Cancel
