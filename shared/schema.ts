@@ -296,14 +296,7 @@ export const createBiodataSchema = insertBiodataSchema.extend({
     return val;
   })
 }).omit({
-  id: true,
-  userId: true,
-  token: true,
   status: true,
-  createdAt: true,
-  updatedAt: true,
-  publishedAt: true,
-  reviewedAt: true,
   reviewedBy: true,
   reviewNotes: true,
   profilePhoto: true,
@@ -312,13 +305,61 @@ export const createBiodataSchema = insertBiodataSchema.extend({
 export type CreateBiodataRequest = z.infer<typeof createBiodataSchema>;
 
 // Update Biodata Request
-export const updateBiodataSchema = insertBiodataSchema.partial();
+export const updateBiodataSchema = insertBiodataSchema
+  .partial()
+  .extend({
+    dateOfBirth: z
+      .union([z.date(), z.string()])
+      .optional()
+      .transform((val) => {
+        if (typeof val === "string") return new Date(val);
+        return val;
+      }),
+  });
 export type UpdateBiodataRequest = z.infer<typeof updateBiodataSchema>;
 
 // Publish Biodata Request (requires authentication)
 export type PublishBiodataRequest = {
   biodataId: number;
 };
+
+export const biodataWizardBasicProfileSchema = z.object({
+  fullName: z.string().min(2).max(100),
+  biodata_type: z.enum(["groom", "bride"]),
+  marital_status: z.enum(["unmarried", "married", "divorced", "widowed"]),
+  birth_month_year: z
+    .union([z.date(), z.string()])
+    .transform((val) => (typeof val === "string" ? new Date(val) : val)),
+  height: z.string().min(1),
+  weight: z.string().optional(),
+  complexion: z.enum(["fair", "wheatish", "dusky"]).optional(),
+  blood_group: z
+    .enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
+    .optional(),
+  nationality: z.string().max(50).optional(),
+});
+export type BiodataWizardBasicProfileRequest = z.infer<typeof biodataWizardBasicProfileSchema>;
+
+export const biodataWizardAddressSchema = z.object({
+  permanent_address: z.object({
+    country: z.string().min(2).max(50),
+    division: z.string().min(2).max(50),
+    district: z.string().min(2).max(50),
+    upazila_thana: z.string().min(2).max(50),
+    city_corp: z.string().max(50).optional(),
+    area_name: z.string().max(100).optional(),
+  }),
+  current_address: z.object({
+    country: z.string().min(2).max(50),
+    division: z.string().min(2).max(50),
+    district: z.string().min(2).max(50),
+    upazila_thana: z.string().min(2).max(50),
+    city_corp: z.string().max(50).optional(),
+    area_name: z.string().max(100).optional(),
+  }),
+  where_grew_up: z.string().max(500).optional(),
+});
+export type BiodataWizardAddressRequest = z.infer<typeof biodataWizardAddressSchema>;
 
 // Biodata with Relations
 export type BiodataWithDetails = Biodata & {

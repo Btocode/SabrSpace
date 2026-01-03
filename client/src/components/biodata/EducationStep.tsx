@@ -33,6 +33,8 @@ export function EducationStep({ form }: EducationStepProps) {
     name: "higher_education"
   });
 
+  const educationMedium = form.watch("education_medium");
+
   return (
     <Card className="border-none shadow-none bg-transparent">
       <CardHeader>
@@ -43,7 +45,12 @@ export function EducationStep({ form }: EducationStepProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="education_medium">Education Medium</Label>
-            <Select onValueChange={(value) => form.setValue("education_medium", value as "general" | "madrasa" | "english_medium")}>
+            <Select
+              value={educationMedium ?? undefined}
+              onValueChange={(value) =>
+                form.setValue("education_medium", value as "general" | "madrasa" | "english_medium")
+              }
+            >
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Select medium" />
               </SelectTrigger>
@@ -107,7 +114,12 @@ export function EducationStep({ form }: EducationStepProps) {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
                     <Label>Level</Label>
-                    <Select onValueChange={(value) => form.setValue(`higher_education.${index}.level`, value as "bachelor" | "master" | "phd")}>
+                    <Select
+                      value={form.watch(`higher_education.${index}.level`) ?? undefined}
+                      onValueChange={(value) =>
+                        form.setValue(`higher_education.${index}.level`, value as "bachelor" | "master" | "phd")
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>

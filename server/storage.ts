@@ -48,6 +48,19 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private coerceDate(value: unknown, fieldName: string): Date {
+    if (value instanceof Date) {
+      if (Number.isNaN(value.getTime())) throw new Error(`Invalid ${fieldName}`);
+      return value;
+    }
+    if (typeof value === "string" || typeof value === "number") {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) throw new Error(`Invalid ${fieldName}`);
+      return d;
+    }
+    throw new Error(`Invalid ${fieldName}`);
+  }
+
   async getQuestionSet(id: number): Promise<QuestionSetWithQuestions | undefined> {
     const set = await db.query.questionSets.findFirst({
       where: eq(questionSets.id, id),
@@ -295,6 +308,10 @@ export class DatabaseStorage implements IStorage {
         status: 'draft',
       };
 
+      if (insertData.dateOfBirth !== undefined && insertData.dateOfBirth !== null) {
+        insertData.dateOfBirth = this.coerceDate(insertData.dateOfBirth, "dateOfBirth");
+      }
+
       console.log('Insert data:', JSON.stringify(insertData, null, 2));
 
       const [newBiodata] = await db.insert(biodata).values([insertData]).returning();
@@ -310,8 +327,37 @@ export class DatabaseStorage implements IStorage {
     const existing = await this.getBiodata(id);
     if (!existing || existing.userId !== userId) return undefined;
 
+    const safeData: any = { ...data };
+    const coerceOptionalDateField = (key: "dateOfBirth" | "publishedAt" | "reviewedAt") => {
+      if (safeData[key] === undefined) return;
+      if (safeData[key] === null) {
+        delete safeData[key];
+        return;
+      }
+      safeData[key] = this.coerceDate(safeData[key], key);
+    };
+
+    coerceOptionalDateField("dateOfBirth");
+    coerceOptionalDateField("publishedAt");
+    coerceOptionalDateField("reviewedAt");
+
+    // Defensive: Drizzle will attempt to serialize unknown objects and can crash.
+    // Only allow primitives, Date, arrays, and null/undefined (undefined should be absent).
+    for (const [k, v] of Object.entries(safeData)) {
+      if (v === undefined) {
+        delete safeData[k];
+        continue;
+      }
+      if (v === null) continue;
+      if (v instanceof Date) continue;
+      if (Array.isArray(v)) continue;
+      const t = typeof v;
+      if (t === "string" || t === "number" || t === "boolean") continue;
+      delete safeData[k];
+    }
+
     const [updated] = await db.update(biodata)
-      .set({ ...data, updatedAt: new Date() })
+      .set({ ...safeData, updatedAt: new Date() })
       .where(and(eq(biodata.id, id), eq(biodata.userId, userId)))
       .returning();
     return updated;

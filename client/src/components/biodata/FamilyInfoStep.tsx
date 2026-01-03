@@ -31,6 +31,8 @@ interface FamilyInfoStepProps {
 }
 
 export function FamilyInfoStep({ form }: FamilyInfoStepProps) {
+  const economicStatus = form.watch("economic_status");
+
   return (
     <Card className="border-none shadow-none bg-transparent">
       <CardHeader>
@@ -135,7 +137,12 @@ export function FamilyInfoStep({ form }: FamilyInfoStepProps) {
 
           <div className="space-y-2">
             <Label htmlFor="economic_status">Economic Status</Label>
-            <Select onValueChange={(value) => form.setValue("economic_status", value as "lower" | "lower_middle" | "middle" | "upper_middle")}>
+            <Select
+              value={economicStatus ?? undefined}
+              onValueChange={(value) =>
+                form.setValue("economic_status", value as "lower" | "lower_middle" | "middle" | "upper_middle")
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select economic status" />
               </SelectTrigger>

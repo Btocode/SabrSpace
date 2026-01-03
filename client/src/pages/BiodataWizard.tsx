@@ -391,6 +391,36 @@ export default function BiodataWizard() {
   const [, navigate] = useLocation();
   const { addToast } = useToast();
 
+  const formatFormErrors = (errors: any) => {
+    const out: Array<{ path: string; message: string }> = [];
+
+    const walk = (node: any, prefix: string) => {
+      if (!node) return;
+      if (typeof node !== "object") return;
+
+      if (typeof node.message === "string" && node.message.trim().length > 0) {
+        out.push({ path: prefix || "field", message: node.message });
+      }
+
+      for (const [k, v] of Object.entries(node)) {
+        if (k === "message" || k === "type" || k === "ref") continue;
+        const nextPrefix = prefix ? `${prefix}.${k}` : k;
+        walk(v, nextPrefix);
+      }
+    };
+
+    walk(errors, "");
+
+    // Remove duplicates and keep a stable order
+    const seen = new Set<string>();
+    return out.filter((e) => {
+      const key = `${e.path}:${e.message}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
   // Zustand store
   const {
     formData,
@@ -494,37 +524,58 @@ export default function BiodataWizard() {
     const career = allData.career;
     const marriage = allData.marriage;
 
-    // Map biodata_type to gender
-    const gender =
-      basic?.biodata_type === "groom"
-        ? "male"
-        : basic?.biodata_type === "bride"
-          ? "female"
-          : "male";
-
-    // Base payload - only include basic info for step 1
-    const payload: any = {
-      // Basic Info (required by backend)
-      fullName: basic?.fullName || "",
-      gender: gender || "male",
-
-      // Basic Profile
-      dateOfBirth: basic?.birth_month_year || null,
-      maritalStatus: basic?.marital_status === "unmarried" ? "never_married" :
-                    basic?.marital_status === "married" ? "never_married" :
-                    basic?.marital_status === "divorced" ? "divorced" :
-                    basic?.marital_status === "widowed" ? "widowed" : "never_married",
-      height: basic?.height,
-      weight: basic?.weight,
-      complexion: basic?.complexion,
-      bloodGroup: basic?.blood_group,
-      nationality: basic?.nationality,
+    const hasMeaningfulData = (value: any): boolean => {
+      if (!value) return false;
+      if (typeof value !== "object") return Boolean(value);
+      if (Array.isArray(value)) return value.length > 0;
+      return Object.values(value).some((v) => {
+        if (v === null || v === undefined) return false;
+        if (typeof v === "string") return v.trim().length > 0;
+        if (typeof v === "number") return true;
+        if (typeof v === "boolean") return true;
+        if (v instanceof Date) return !Number.isNaN(v.getTime());
+        if (Array.isArray(v)) return v.length > 0;
+        if (typeof v === "object") return hasMeaningfulData(v);
+        return Boolean(v);
+      });
     };
 
+    const mapMaritalStatus = (
+      status: any,
+    ): "never_married" | "married" | "divorced" | "widowed" | undefined => {
+      if (!status) return undefined;
+      if (status === "unmarried") return "never_married";
+      if (status === "married") return "married";
+      if (status === "divorced") return "divorced";
+      if (status === "widowed") return "widowed";
+      return undefined;
+    };
+
+    const payload: any = {};
+
+    // Only include basic profile fields if we actually have meaningful basic data.
+    // This prevents PATCH updates from overwriting saved biodata with empty defaults.
+    if (hasMeaningfulData(basic)) {
+      const gender =
+        basic?.biodata_type === "groom"
+          ? "male"
+          : basic?.biodata_type === "bride"
+            ? "female"
+            : undefined;
+
+      payload.fullName = basic?.fullName;
+      payload.gender = gender;
+      payload.dateOfBirth = basic?.birth_month_year;
+      payload.maritalStatus = mapMaritalStatus(basic?.marital_status);
+      payload.height = basic?.height;
+      payload.weight = basic?.weight;
+      payload.complexion = basic?.complexion;
+      payload.bloodGroup = basic?.blood_group;
+      payload.nationality = basic?.nationality;
+    }
+
     // Only include address data if address step is completed
-    if (address) {
-      payload.phone = null;
-      payload.email = null;
+    if (hasMeaningfulData(address)) {
       payload.address = `${address.permanent_address.area_name || ""}, ${address.permanent_address.district}, ${address.permanent_address.division}, ${address.permanent_address.country}`.replace(/^, /, "");
       payload.city = address.permanent_address.district;
       payload.state = address.permanent_address.division;
@@ -532,7 +583,7 @@ export default function BiodataWizard() {
     }
 
     // Only include education data if education step is completed
-    if (education) {
+    if (hasMeaningfulData(education)) {
       payload.educationLevel = education.education_medium;
       payload.educationDetails = education.ssc_year
         ? `SSC: ${education.ssc_year}, ${education.ssc_group}, ${education.ssc_result}` +
@@ -542,7 +593,7 @@ export default function BiodataWizard() {
     }
 
     // Only include career data if career step is completed
-    if (career) {
+    if (hasMeaningfulData(career)) {
       payload.profession = career.occupation_title;
       payload.occupation = career.occupation_details;
       payload.annualIncome = career.monthly_income ? (career.monthly_income * 12).toString() : undefined;
@@ -550,7 +601,7 @@ export default function BiodataWizard() {
     }
 
     // Only include family data if family step is completed
-    if (family) {
+    if (hasMeaningfulData(family)) {
       payload.fatherName = family.father?.occupation ? `Father - ${family.father.occupation}` : undefined;
       payload.fatherOccupation = family.father?.occupation;
       payload.motherName = family.mother?.occupation ? `Mother - ${family.mother.occupation}` : undefined;
@@ -560,9 +611,8 @@ export default function BiodataWizard() {
     }
 
     // Only include personal/religious data if personal step is completed
-    if (personal) {
+    if (hasMeaningfulData(personal)) {
       payload.religion = "islam";
-      payload.sect = null;
       payload.religiousPractice = personal.five_times_prayer === "yes" ? "regular" : personal.five_times_prayer === "trying" ? "regular" : "occasional";
       payload.prayerFrequency = personal.five_times_prayer === "yes" ? "5_times" : personal.five_times_prayer === "trying" ? "3_times" : "occasional";
       payload.fasting = "ramadan_only";
@@ -572,11 +622,8 @@ export default function BiodataWizard() {
     }
 
     // Only include marriage data if marriage step is completed
-    if (marriage) {
-      payload.maritalStatus = basic?.marital_status === "unmarried" ? "never_married" :
-                             basic?.marital_status === "married" ? "never_married" :
-                             basic?.marital_status === "divorced" ? "divorced" :
-                             basic?.marital_status === "widowed" ? "widowed" : "never_married";
+    if (hasMeaningfulData(marriage)) {
+      // Don't re-send maritalStatus here; it belongs to basic profile.
       payload.willingToRelocate = !!marriage.marriage_related?.after_marriage_location;
       payload.preferredAgeMin = marriage.desired_spouse?.age_range ? parseInt(marriage.desired_spouse.age_range.split("-")[0]) : undefined;
       payload.preferredAgeMax = marriage.desired_spouse?.age_range ? parseInt(marriage.desired_spouse.age_range.split("-")[1]) : undefined;
@@ -591,27 +638,50 @@ export default function BiodataWizard() {
   };
 
   const saveStepData = async (
-    allData: any,
+    stepId: string,
+    stepData: any,
   ): Promise<string | number | undefined> => {
     try {
-      const payload = mapToBackendSchema(allData);
       const token = localStorage.getItem("auth_token");
 
-      const response = await fetch(
-        biodataId
-          ? api.biodata.update.path.replace(":id", String(biodataId))
-          : api.biodata.create.path,
-        {
-          method: biodataId ? "PATCH" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify(payload),
-        },
-      );
+      const url = biodataId
+        ? api.biodataWizard.updateStep.path
+            .replace(":id", String(biodataId))
+            .replace(":stepId", stepId)
+        : api.biodataWizard.createFromBasicProfile.path;
 
-      if (!response.ok) throw new Error("Failed to save biodata");
+      const method = biodataId ? "PATCH" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(stepData),
+      });
+
+      if (!response.ok) {
+        let details = "Failed to save biodata";
+        try {
+          const errJson = await response.json();
+          if (errJson?.message) details = String(errJson.message);
+          if (Array.isArray(errJson?.errors) && errJson.errors.length > 0) {
+            const msg = errJson.errors
+              .map((e: any) => {
+                const path = Array.isArray(e.path) ? e.path.join(".") : e.path;
+                return path ? `${path}: ${e.message}` : e.message;
+              })
+              .filter(Boolean)
+              .slice(0, 6)
+              .join("\n");
+            if (msg) details = msg;
+          }
+        } catch {
+          // ignore JSON parsing errors
+        }
+        throw new Error(details);
+      }
 
       const savedBiodata = await response.json();
       setBiodataId(savedBiodata.id);
@@ -713,11 +783,24 @@ export default function BiodataWizard() {
     console.log('Current form values:', form.getValues());
     console.log('Current form errors:', form.formState.errors);
 
-    // Temporarily bypass validation for debugging
-    const isValid = true; // await form.trigger();
+    const isValid = await form.trigger();
     console.log('Form validation result:', isValid);
     if (!isValid) {
       console.log('Form errors after trigger:', form.formState.errors);
+
+      const formatted = formatFormErrors(form.formState.errors);
+      const details = formatted
+        .slice(0, 6)
+        .map((e) => `- ${e.message}`)
+        .join("\n");
+
+      addToast({
+        type: "error",
+        title: "Please fix the highlighted fields",
+        description:
+          details || "Some required information is missing or invalid.",
+        duration: 4000,
+      });
       return;
     }
 
@@ -726,21 +809,19 @@ export default function BiodataWizard() {
     // Update step data in store
     updateStepData(currentStepData.id, data);
 
-    // Snapshot including this step's latest data
-    const updatedFormData = {
-      ...(formData as any),
-      [currentStepData.id]: data,
-    };
-
-    // Save as draft on every step
-    const savedId = await saveStepData(updatedFormData);
+    // Save only this step to the step-specific endpoint
+    const savedId = await saveStepData(currentStepData.id, data);
 
     // Only proceed if save was successful (savedId is not undefined)
     if (savedId !== undefined) {
       if (currentStep < steps.length - 1) {
         setCurrentStep(currentStep + 1);
       } else {
-        // Final step: complete/publish
+        // Final step: complete/publish (still uses legacy path for now)
+        const updatedFormData = {
+          ...(formData as any),
+          [currentStepData.id]: data,
+        };
         await markBiodataComplete(updatedFormData, savedId);
       }
     } else {

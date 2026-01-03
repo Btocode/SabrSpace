@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +9,16 @@ import { Plus, Eye, Edit, Download, Share2, Heart, Users, BookOpen, Shield } fro
 import { useLanguage } from "@/lib/i18n";
 import { Navbar } from "@/components/Navbar";
 import { api } from "@shared/routes";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 export default function BiodataList() {
   const { t } = useLanguage();
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [downloadVariant, setDownloadVariant] = useState<"minimal" | "comprehensive">("comprehensive");
+  const [downloadTargetId, setDownloadTargetId] = useState<number | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const { data: biodata, isLoading } = useQuery({
     queryKey: ["biodata"],
@@ -53,7 +60,6 @@ export default function BiodataList() {
       published: "Published",
       rejected: "Rejected",
     };
-
     const colors = {
       draft: "bg-yellow-100 text-yellow-800 border-yellow-200",
       pending_review: "bg-blue-100 text-blue-800 border-blue-200",
@@ -71,24 +77,158 @@ export default function BiodataList() {
     );
   };
 
+  const sortedBiodata = useMemo(() => {
+    const items = Array.isArray(biodata) ? [...biodata] : [];
+    items.sort((a: any, b: any) => {
+      const da = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
+      const db = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime();
+      return db - da;
+    });
+    return items;
+  }, [biodata]);
+
+  const featured = sortedBiodata[0] as any | undefined;
+
+  const downloadPdf = async (id: number, variant: "minimal" | "comprehensive") => {
+    setIsDownloading(true);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const url = `${api.biodata.download.path.replace(":id", String(id))}?variant=${variant}`;
+      const res = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        let details = "Failed to download PDF";
+        try {
+          const err = await res.json();
+          if (err?.message) details = String(err.message);
+        } catch {
+          // ignore
+        }
+        throw new Error(details);
+      }
+
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `biodata-${id}-${variant}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-pattern">
       <Navbar />
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
-          {/* Main Content - Left/Right Layout */}
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Left Side - Islamic Guidance */}
-            <div className="lg:col-span-1 space-y-6">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold">Your Biodata Profiles</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Draft, publish, and share your marriage biodata.
+              </p>
+            </div>
+
+            <Link href="/biodata/create">
+              <Button className="gap-2 rounded-full">
+                <Plus className="w-4 h-4" />
+                Create biodata
+              </Button>
+            </Link>
+          </div>
+
+          {featured ? (
+            <Card className="mb-6 overflow-hidden border-primary/20">
+              <CardContent className="p-0">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/12 via-background to-amber-500/10" />
+                  <div className="relative p-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {getStatusBadge(featured.status)}
+                          <Badge variant="outline" className="rounded-full">
+                            Active
+                          </Badge>
+                        </div>
+                        <p className="mt-2 text-lg font-semibold text-foreground">
+                          {featured.fullName || "Untitled Biodata"}
+                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Keep it clear and honest. Strong biodata increases meaningful matches.
+                        </p>
+
+                        <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                          <div>
+                            <span className="font-medium">Gender:</span> {featured.gender || "Not set"}
+                          </div>
+                          <div>
+                            <span className="font-medium">Age:</span>{" "}
+                            {featured.dateOfBirth
+                              ? new Date().getFullYear() - new Date(featured.dateOfBirth).getFullYear()
+                              : "Not set"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <Link href={`/biodata/${featured.id}`}>
+                          <Button variant="outline" size="sm" className="gap-1 h-9 rounded-full">
+                            <Eye className="w-4 h-4" />
+                            Preview
+                          </Button>
+                        </Link>
+                        <Link href={`/biodata/create?edit=${featured.id}`}>
+                          <Button variant="outline" size="sm" className="gap-1 h-9 rounded-full">
+                            <Edit className="w-4 h-4" />
+                            Continue
+                          </Button>
+                        </Link>
+                        <Button
+                          size="sm"
+                          className="gap-1 h-9 rounded-full"
+                          disabled={featured.status === "draft"}
+                          onClick={() => {
+                            setDownloadTargetId(featured.id);
+                            setDownloadVariant("comprehensive");
+                            setIsDownloadOpen(true);
+                          }}
+                        >
+                          <Download className="w-4 h-4" />
+                          Download PDF
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {/* Main Content - Community-like Layout */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            {/* Left Side - Guidance (sidebar vibe) */}
+            <div className="lg:col-span-4 space-y-6">
               {/* Quran Quote */}
-              <Card className="glass-panel border-none">
-                <CardContent className="p-6 text-center space-y-4">
-                  <div className="text-4xl font-arabic text-primary">﷽</div>
-                  <blockquote className="text-sm text-muted-foreground italic">
-                    "And one of His signs is that He created for you spouses from among yourselves so that you may find comfort in them..."
-                  </blockquote>
-                  <cite className="text-xs font-medium text-primary">- Surah Ar-Rum (30:21)</cite>
+              <Card className="overflow-hidden border-primary/15">
+                <CardContent className="p-0">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-background to-amber-500/10" />
+                    <div className="relative p-6 text-center space-y-4">
+                      <div className="text-4xl font-arabic text-primary">﷽</div>
+                      <blockquote className="text-sm text-muted-foreground italic">
+                        "And one of His signs is that He created for you spouses from among yourselves so that you may find comfort in them..."
+                      </blockquote>
+                      <cite className="text-xs font-medium text-primary">- Surah Ar-Rum (30:21)</cite>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -151,24 +291,33 @@ export default function BiodataList() {
                   </ul>
                 </CardContent>
               </Card>
+
+              <Card className="border-border bg-background/70">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    How biodata helps you match better
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    A good biodata filters for compatibility early and reduces awkward back-and-forth.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <ul className="text-xs space-y-2 text-muted-foreground">
+                    <li>• Clear essentials (age, location, education) save time for both families.</li>
+                    <li>• Specific religious practice helps align expectations.</li>
+                    <li>• Honest preferences reduce mismatches and ghosting.</li>
+                    <li>• Minimal PDF is best for first introductions; comprehensive is best after serious interest.</li>
+                  </ul>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Right Side - Biodata Management */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Biodata List Header */}
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">Your Biodata Profiles</h2>
-                <Link href="/biodata/create">
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Plus className="w-4 h-4" />
-                    New
-                  </Button>
-                </Link>
-              </div>
-
+            {/* Right Side - Biodata Cards */}
+            <div className="lg:col-span-8 space-y-6">
               {/* Biodata Grid */}
               {biodata?.length === 0 ? (
-                <Card className="border-dashed border-2 border-primary/20">
+                <Card className="glass-panel border-dashed border-2 border-primary/20">
                   <CardContent className="flex flex-col items-center justify-center py-12">
                     <div className="text-center space-y-4">
                       <div className="text-4xl">📝</div>
@@ -179,7 +328,7 @@ export default function BiodataList() {
                         </p>
                       </div>
                       <Link href="/biodata/create">
-                        <Button className="gap-2">
+                        <Button className="gap-2 rounded-full">
                           <Plus className="w-4 h-4" />
                           Create Biodata
                         </Button>
@@ -190,70 +339,111 @@ export default function BiodataList() {
               ) : (
                 <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
                   {biodata?.map((item: any) => (
-                    <Card key={item.id} className="glass-panel border-none">
-                      <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-1">
-                            <CardTitle className="text-lg">{item.fullName || 'Untitled Biodata'}</CardTitle>
-                            <CardDescription className="text-xs">
-                              {new Date(item.createdAt).toLocaleDateString()}
-                            </CardDescription>
-                          </div>
-                          {getStatusBadge(item.status)}
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                            <div>
-                              <span className="font-medium">Gender:</span> {item.gender || 'Not set'}
-                            </div>
-                            <div>
-                              <span className="font-medium">Age:</span> {item.dateOfBirth ? new Date().getFullYear() - new Date(item.dateOfBirth).getFullYear() : 'Not set'}
-                            </div>
-                          </div>
+                    <Card key={item.id} className="overflow-hidden border-primary/20">
+                      <CardContent className="p-0">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-amber-500/10" />
+                          <div className="relative p-5">
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  {getStatusBadge(item.status)}
+                                  <Badge variant="outline" className="rounded-full">
+                                    Biodata
+                                  </Badge>
+                                </div>
+                                <p className="mt-2 text-base font-semibold text-foreground">
+                                  {item.fullName || "Untitled Biodata"}
+                                </p>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  Updated {new Date(item.updatedAt ?? item.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
 
-                          <div className="flex flex-wrap gap-2">
-                            <Link href={`/biodata/${item.id}`}>
-                              <Button variant="outline" size="sm" className="gap-1 h-8">
-                                <Eye className="w-3 h-3" />
-                                View
-                              </Button>
-                            </Link>
-                            <Link href={`/biodata/create?edit=${item.id}`}>
-                              <Button variant="outline" size="sm" className="gap-1 h-8">
-                                <Edit className="w-3 h-3" />
-                                Edit
-                              </Button>
-                            </Link>
-                            {item.status === 'published' && (
-                              <>
+                              <div className="text-right">
+                                <p className="text-xs text-muted-foreground">#{item.id}</p>
+                                <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-background/60 px-3 py-1 text-xs text-muted-foreground border border-border">
+                                  <Shield className="w-4 h-4 text-primary" />
+                                  {item.status === "published" ? "Public" : "Private"}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                              <div>
+                                <span className="font-medium">Gender:</span> {item.gender || "Not set"}
+                              </div>
+                              <div>
+                                <span className="font-medium">Age:</span> {item.dateOfBirth ? new Date().getFullYear() - new Date(item.dateOfBirth).getFullYear() : "Not set"}
+                              </div>
+                            </div>
+
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              <Link href={`/biodata/${item.id}`}>
+                                <Button variant="outline" size="sm" className="gap-1 h-8 rounded-full">
+                                  <Eye className="w-3 h-3" />
+                                  View
+                                </Button>
+                              </Link>
+                              <Link href={`/biodata/create?edit=${item.id}`}>
+                                <Button variant="outline" size="sm" className="gap-1 h-8 rounded-full">
+                                  <Edit className="w-3 h-3" />
+                                  Edit
+                                </Button>
+                              </Link>
+                              {item.status === 'published' && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-1 h-8 rounded-full"
+                                    onClick={() => navigator.clipboard.writeText(`${window.location.origin}/b/${item.token}`)}
+                                  >
+                                    <Share2 className="w-3 h-3" />
+                                    Share
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-1 h-8 rounded-full"
+                                    onClick={() => {
+                                      setDownloadTargetId(item.id);
+                                      setDownloadVariant("comprehensive");
+                                      setIsDownloadOpen(true);
+                                    }}
+                                  >
+                                    <Download className="w-3 h-3" />
+                                    PDF
+                                  </Button>
+                                </>
+                              )}
+                              {item.status !== 'published' && item.status !== 'draft' && (
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="gap-1 h-8"
-                                  onClick={() => navigator.clipboard.writeText(`${window.location.origin}/b/${item.token}`)}
+                                  className="gap-1 h-8 rounded-full"
+                                  onClick={() => {
+                                    setDownloadTargetId(item.id);
+                                    setDownloadVariant("comprehensive");
+                                    setIsDownloadOpen(true);
+                                  }}
                                 >
-                                  <Share2 className="w-3 h-3" />
-                                  Share
-                                </Button>
-                                <Button variant="outline" size="sm" className="gap-1 h-8">
                                   <Download className="w-3 h-3" />
                                   PDF
                                 </Button>
-                              </>
-                            )}
-                            {item.status === 'draft' && (
-                              <Button
-                                size="sm"
-                                className="gap-1 h-8"
-                                onClick={async () => {
-                                  alert('Publish functionality coming soon!');
-                                }}
-                              >
-                                Publish
-                              </Button>
-                            )}
+                              )}
+                              {item.status === 'draft' && (
+                                <Button
+                                  size="sm"
+                                  className="gap-1 h-8 rounded-full"
+                                  onClick={async () => {
+                                    alert('Publish functionality coming soon!');
+                                  }}
+                                >
+                                  Publish
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </CardContent>
@@ -263,6 +453,57 @@ export default function BiodataList() {
               )}
             </div>
           </div>
+
+          <Dialog open={isDownloadOpen} onOpenChange={setIsDownloadOpen}>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Download biodata PDF</DialogTitle>
+                <DialogDescription>
+                  Choose a format. Minimal is best for first introductions; comprehensive includes everything you filled.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3">
+                <RadioGroup
+                  value={downloadVariant}
+                  onValueChange={(v) => {
+                    if (v === "minimal" || v === "comprehensive") setDownloadVariant(v);
+                  }}
+                >
+                  <div className="flex items-start gap-3 rounded-lg border p-3">
+                    <RadioGroupItem value="minimal" id="pdf-minimal" className="mt-1" />
+                    <div>
+                      <Label htmlFor="pdf-minimal" className="font-medium">Minimal</Label>
+                      <p className="text-xs text-muted-foreground">Essentials only (safe to share widely).</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 rounded-lg border p-3">
+                    <RadioGroupItem value="comprehensive" id="pdf-comprehensive" className="mt-1" />
+                    <div>
+                      <Label htmlFor="pdf-comprehensive" className="font-medium">Comprehensive</Label>
+                      <p className="text-xs text-muted-foreground">All available sections for serious proposals.</p>
+                    </div>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDownloadOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  disabled={!downloadTargetId || isDownloading}
+                  onClick={async () => {
+                    if (!downloadTargetId) return;
+                    await downloadPdf(downloadTargetId, downloadVariant);
+                    setIsDownloadOpen(false);
+                  }}
+                >
+                  {isDownloading ? "Preparing…" : "Download"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

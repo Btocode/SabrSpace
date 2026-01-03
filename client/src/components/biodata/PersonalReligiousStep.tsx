@@ -27,6 +27,10 @@ interface PersonalReligiousStepProps {
 }
 
 export function PersonalReligiousStep({ form }: PersonalReligiousStepProps) {
+  const fiveTimesPrayer = form.watch("five_times_prayer");
+  const mahramPractice = form.watch("mahram_non_mahram");
+  const fiqh = form.watch("fiqh");
+
   return (
     <Card className="border-none shadow-none bg-transparent">
       <CardHeader>
@@ -75,7 +79,10 @@ export function PersonalReligiousStep({ form }: PersonalReligiousStepProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="five_times_prayer">Do you pray 5 times daily?</Label>
-              <Select onValueChange={(value) => form.setValue("five_times_prayer", value as "yes" | "trying" | "no")}>
+              <Select
+                value={fiveTimesPrayer ?? undefined}
+                onValueChange={(value) => form.setValue("five_times_prayer", value as "yes" | "trying" | "no")}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select option" />
                 </SelectTrigger>
@@ -99,7 +106,10 @@ export function PersonalReligiousStep({ form }: PersonalReligiousStepProps) {
 
           <div className="space-y-2">
             <Label htmlFor="mahram_non_mahram">Mahram/Non-mahram Practice</Label>
-            <Select onValueChange={(value) => form.setValue("mahram_non_mahram", value as "strict" | "trying" | "casual")}>
+            <Select
+              value={mahramPractice ?? undefined}
+              onValueChange={(value) => form.setValue("mahram_non_mahram", value as "strict" | "trying" | "casual")}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select practice level" />
               </SelectTrigger>
@@ -122,7 +132,12 @@ export function PersonalReligiousStep({ form }: PersonalReligiousStepProps) {
 
           <div className="space-y-2">
             <Label htmlFor="fiqh">Fiqh (School of Islamic Jurisprudence)</Label>
-            <Select onValueChange={(value) => form.setValue("fiqh", value as "hanafi" | "shafi" | "maliki" | "hanbali" | "other")}>
+            <Select
+              value={fiqh ?? undefined}
+              onValueChange={(value) =>
+                form.setValue("fiqh", value as "hanafi" | "shafi" | "maliki" | "hanbali" | "other")
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select madhab" />
               </SelectTrigger>

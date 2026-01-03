@@ -3,11 +3,20 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { users, questionSets, questions, createBiodataSchema } from "@shared/schema";
+import {
+  users,
+  questionSets,
+  questions,
+  createBiodataSchema,
+  updateBiodataSchema,
+  biodataWizardBasicProfileSchema,
+  biodataWizardAddressSchema,
+} from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { authenticateToken, optionalAuthenticateToken, authStorage } from "./auth";
 import { attachClientIP } from "./auth/middleware";
+import { buildBiodataPdf } from "./biodataPdf";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -146,6 +155,108 @@ export async function registerRoutes(
 
   // === Biodata Routes ===
 
+  app.post(api.biodataWizard.createFromBasicProfile.path, optionalAuthenticateToken, async (req, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const step = biodataWizardBasicProfileSchema.parse(req.body);
+      const gender = step.biodata_type === "groom" ? "male" : "female";
+      const maritalStatus =
+        step.marital_status === "unmarried"
+          ? "never_married"
+          : step.marital_status === "married"
+            ? "married"
+            : step.marital_status;
+
+      const payload = createBiodataSchema.parse({
+        fullName: step.fullName,
+        gender,
+        dateOfBirth: step.birth_month_year,
+        maritalStatus,
+        height: step.height,
+        weight: step.weight,
+        complexion: step.complexion,
+        bloodGroup: step.blood_group,
+        nationality: step.nationality,
+      });
+
+      const created = await storage.createBiodata(userId, payload);
+      return res.status(201).json(created);
+    } catch (err: any) {
+      if (err?.name === "ZodError") {
+        return res.status(400).json({ message: "Validation error", errors: err.errors });
+      }
+      console.error("Biodata wizard create error:", err);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch(api.biodataWizard.updateStep.path, optionalAuthenticateToken, async (req, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const biodataId = Number(req.params.id);
+      const stepId = String(req.params.stepId);
+
+      let updatePayload: any = {};
+
+      if (stepId === "basic_profile") {
+        const step = biodataWizardBasicProfileSchema.parse(req.body);
+        const gender = step.biodata_type === "groom" ? "male" : "female";
+        const maritalStatus =
+          step.marital_status === "unmarried"
+            ? "never_married"
+            : step.marital_status === "married"
+              ? "married"
+              : step.marital_status;
+
+        updatePayload = {
+          fullName: step.fullName,
+          gender,
+          dateOfBirth: step.birth_month_year,
+          maritalStatus,
+          height: step.height,
+          weight: step.weight,
+          complexion: step.complexion,
+          bloodGroup: step.blood_group,
+          nationality: step.nationality,
+        };
+      } else if (stepId === "address") {
+        const step = biodataWizardAddressSchema.parse(req.body);
+        updatePayload = {
+          address: `${step.permanent_address.area_name || ""}, ${step.permanent_address.district}, ${step.permanent_address.division}, ${step.permanent_address.country}`.replace(
+            /^, /,
+            "",
+          ),
+          city: step.permanent_address.district,
+          state: step.permanent_address.division,
+          country: step.permanent_address.country,
+        };
+      } else {
+        return res.status(400).json({ message: "Validation error", errors: [{ path: ["stepId"], message: "Unsupported step" }] });
+      }
+
+      const validated = updateBiodataSchema.parse(updatePayload);
+      const updated = await storage.updateBiodata(biodataId, userId, validated);
+      if (!updated) {
+        return res.status(404).json({ message: "Biodata not found or unauthorized" });
+      }
+      return res.json(updated);
+    } catch (err: any) {
+      if (err?.name === "ZodError") {
+        return res.status(400).json({ message: "Validation error", errors: err.errors });
+      }
+      console.error("Biodata wizard updateStep error:", err);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Public biodata routes
   app.get(api.publicBiodata.get.path, async (req, res) => {
     const biodataEntry = await storage.getBiodataByToken(req.params.token);
@@ -223,7 +334,12 @@ export async function registerRoutes(
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const input = req.body;
+      let input: any;
+      try {
+        input = updateBiodataSchema.parse(req.body);
+      } catch (validationErr: any) {
+        return res.status(400).json({ message: "Validation error", errors: validationErr.errors });
+      }
       const biodataId = Number(req.params.id);
       
       // Update with only the fields provided in the request
@@ -236,6 +352,13 @@ export async function registerRoutes(
       res.json(updatedBiodata);
     } catch (err) {
       console.error('Biodata update error:', err);
+      const message = err instanceof Error ? err.message : "Internal server error";
+      if (typeof message === "string" && message.startsWith("Invalid ")) {
+        const field = message.replace(/^Invalid\s+/, "");
+        return res
+          .status(400)
+          .json({ message: "Validation error", errors: [{ path: [field], message }] });
+      }
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -260,6 +383,46 @@ export async function registerRoutes(
         return res.status(403).json({ message: err.message });
       }
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get(api.biodata.download.path, optionalAuthenticateToken, async (req, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const id = Number(req.params.id);
+      const biodataEntry = await storage.getBiodata(id);
+      if (!biodataEntry || biodataEntry.userId !== userId) {
+        return res.status(404).json({ message: "Biodata not found" });
+      }
+
+      if (biodataEntry.status === "draft") {
+        return res.status(400).json({ message: "Biodata is not completed yet" });
+      }
+
+      const variantRaw = typeof req.query.variant === "string" ? req.query.variant : "comprehensive";
+      const variant = variantRaw === "minimal" ? "minimal" : "comprehensive";
+
+      const pdfBytes = await buildBiodataPdf(
+        {
+          ...(biodataEntry as any),
+          id: biodataEntry.id,
+        },
+        variant,
+      );
+
+      const safeName = (biodataEntry.fullName || "biodata").replace(/[^a-z0-9\- _]/gi, "").trim() || "biodata";
+      const filename = `${safeName}-${variant}.pdf`;
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename=\"${filename}\"`);
+      return res.status(200).send(Buffer.from(pdfBytes));
+    } catch (err) {
+      console.error("Biodata download error:", err);
+      return res.status(500).json({ message: "Internal server error" });
     }
   });
 

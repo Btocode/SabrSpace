@@ -204,6 +204,27 @@ export const api = {
       },
     },
   },
+  biodataWizard: {
+    createFromBasicProfile: {
+      method: 'POST' as const,
+      path: '/api/biodata/steps/basic_profile',
+      responses: {
+        201: z.custom<typeof biodata.$inferSelect>(),
+        400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+      },
+    },
+    updateStep: {
+      method: 'PATCH' as const,
+      path: '/api/biodata/:id/steps/:stepId',
+      responses: {
+        200: z.custom<typeof biodata.$inferSelect>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+        403: errorSchemas.unauthorized,
+      },
+    },
+  },
   // Public Biodata
   publicBiodata: {
     get: {

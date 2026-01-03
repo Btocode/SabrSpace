@@ -31,6 +31,12 @@ const heightOptions = [
 ];
 
 export function BasicProfileStep({ form }: BasicProfileStepProps) {
+  const biodataType = form.watch("biodata_type");
+  const maritalStatus = form.watch("marital_status");
+  const height = form.watch("height");
+  const complexion = form.watch("complexion");
+  const bloodGroup = form.watch("blood_group");
+
   return (
     <Card className="border-none shadow-none bg-transparent">
       <CardHeader>
@@ -59,7 +65,12 @@ export function BasicProfileStep({ form }: BasicProfileStepProps) {
               type="hidden"
               {...form.register("biodata_type")}
             />
-            <Select onValueChange={(value) => form.setValue("biodata_type", value as "groom" | "bride", { shouldValidate: true })}>
+            <Select
+              value={biodataType ?? undefined}
+              onValueChange={(value) =>
+                form.setValue("biodata_type", value as "groom" | "bride", { shouldValidate: true })
+              }
+            >
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Select your preference" />
               </SelectTrigger>
@@ -79,7 +90,14 @@ export function BasicProfileStep({ form }: BasicProfileStepProps) {
               type="hidden"
               {...form.register("marital_status")}
             />
-            <Select onValueChange={(value) => form.setValue("marital_status", value as "unmarried" | "married" | "divorced" | "widowed", { shouldValidate: true })}>
+            <Select
+              value={maritalStatus ?? undefined}
+              onValueChange={(value) =>
+                form.setValue("marital_status", value as "unmarried" | "married" | "divorced" | "widowed", {
+                  shouldValidate: true,
+                })
+              }
+            >
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
@@ -120,7 +138,10 @@ export function BasicProfileStep({ form }: BasicProfileStepProps) {
               type="hidden"
               {...form.register("height")}
             />
-            <Select onValueChange={(value) => form.setValue("height", value, { shouldValidate: true })}>
+            <Select
+              value={height ?? undefined}
+              onValueChange={(value) => form.setValue("height", value, { shouldValidate: true })}
+            >
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Select your height" />
               </SelectTrigger>
@@ -149,7 +170,10 @@ export function BasicProfileStep({ form }: BasicProfileStepProps) {
 
           <div className="space-y-2">
             <Label htmlFor="complexion" className="text-base font-semibold text-foreground/80">Complexion</Label>
-            <Select onValueChange={(value) => form.setValue("complexion", value as "fair" | "wheatish" | "dusky")}>
+            <Select
+              value={complexion ?? undefined}
+              onValueChange={(value) => form.setValue("complexion", value as "fair" | "wheatish" | "dusky")}
+            >
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Select complexion" />
               </SelectTrigger>
@@ -163,7 +187,7 @@ export function BasicProfileStep({ form }: BasicProfileStepProps) {
 
           <div className="space-y-2">
             <Label htmlFor="blood_group" className="text-base font-semibold text-foreground/80">Blood Group</Label>
-            <Select onValueChange={(value) => form.setValue("blood_group", value)}>
+            <Select value={bloodGroup ?? undefined} onValueChange={(value) => form.setValue("blood_group", value)}>
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Select blood group" />
               </SelectTrigger>
