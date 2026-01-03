@@ -6,7 +6,7 @@ export interface BiodataFormData {
   fullName: string;
   biodata_type: "groom" | "bride";
   marital_status: "unmarried" | "married" | "divorced" | "widowed";
-  birth_month_year: string;
+  birth_month_year: Date;
   height: string;
   weight: string;
   complexion?: "fair" | "wheatish" | "dusky";
@@ -141,7 +141,7 @@ const initialFormData: Partial<BiodataFormData> = {
   fullName: "",
   biodata_type: undefined,
   marital_status: undefined,
-  birth_month_year: "",
+  birth_month_year: new Date(2000, 0, 1), // Default to January 1, 2000
   height: "",
   weight: "",
   complexion: undefined,
@@ -278,7 +278,7 @@ export const useBiodataWizardStore = create<BiodataWizardState>()(
           marital_status: biodata.maritalStatus === 'never_married' ? 'unmarried' :
                         biodata.maritalStatus === 'divorced' ? 'divorced' :
                         biodata.maritalStatus === 'widowed' ? 'widowed' : 'unmarried',
-          birth_month_year: "",
+          birth_month_year: biodata.dateOfBirth ? new Date(biodata.dateOfBirth) : new Date(2000, 0, 1),
           height: biodata.height || "",
           weight: biodata.weight || "",
           complexion: biodata.complexion as "fair" | "wheatish" | "dusky",

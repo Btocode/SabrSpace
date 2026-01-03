@@ -3,12 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 
 export type BasicProfileData = {
   fullName: string;
   biodata_type: "groom" | "bride";
   marital_status: "unmarried" | "married" | "divorced" | "widowed";
-  birth_month_year: string;
+  birth_month_year: Date;
   height: string;
   weight?: string;
   complexion?: "fair" | "wheatish" | "dusky";
@@ -19,6 +20,15 @@ export type BasicProfileData = {
 interface BasicProfileStepProps {
   form: UseFormReturn<BasicProfileData>;
 }
+
+// Height options from 3'0" to 7'0"
+const heightOptions = [
+  "3'0\"", "3'1\"", "3'2\"", "3'3\"", "3'4\"", "3'5\"", "3'6\"", "3'7\"", "3'8\"", "3'9\"", "3'10\"", "3'11\"",
+  "4'0\"", "4'1\"", "4'2\"", "4'3\"", "4'4\"", "4'5\"", "4'6\"", "4'7\"", "4'8\"", "4'9\"", "4'10\"", "4'11\"",
+  "5'0\"", "5'1\"", "5'2\"", "5'3\"", "5'4\"", "5'5\"", "5'6\"", "5'7\"", "5'8\"", "5'9\"", "5'10\"", "5'11\"",
+  "6'0\"", "6'1\"", "6'2\"", "6'3\"", "6'4\"", "6'5\"", "6'6\"", "6'7\"", "6'8\"", "6'9\"", "6'10\"", "6'11\"",
+  "7'0\""
+];
 
 export function BasicProfileStep({ form }: BasicProfileStepProps) {
   return (
@@ -45,7 +55,11 @@ export function BasicProfileStep({ form }: BasicProfileStepProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="biodata_type" className="text-base font-semibold text-foreground/80">I am looking for *</Label>
-            <Select onValueChange={(value) => form.setValue("biodata_type", value as "groom" | "bride")}>
+            <input
+              type="hidden"
+              {...form.register("biodata_type")}
+            />
+            <Select onValueChange={(value) => form.setValue("biodata_type", value as "groom" | "bride", { shouldValidate: true })}>
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Select your preference" />
               </SelectTrigger>
@@ -61,7 +75,11 @@ export function BasicProfileStep({ form }: BasicProfileStepProps) {
 
           <div className="space-y-2">
             <Label htmlFor="marital_status" className="text-base font-semibold text-foreground/80">Marital Status *</Label>
-            <Select onValueChange={(value) => form.setValue("marital_status", value as "unmarried" | "married" | "divorced" | "widowed")}>
+            <input
+              type="hidden"
+              {...form.register("marital_status")}
+            />
+            <Select onValueChange={(value) => form.setValue("marital_status", value as "unmarried" | "married" | "divorced" | "widowed", { shouldValidate: true })}>
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
@@ -78,12 +96,18 @@ export function BasicProfileStep({ form }: BasicProfileStepProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="birth_month_year" className="text-base font-semibold text-foreground/80">Birth Month & Year *</Label>
-            <Input
-              id="birth_month_year"
+            <Label className="text-base font-semibold text-foreground/80">Birth Date *</Label>
+            <input
+              type="hidden"
               {...form.register("birth_month_year")}
-              className="h-11"
-              placeholder="e.g., January 1995"
+            />
+            <DatePicker
+              date={form.watch("birth_month_year")}
+              onSelect={(date) => {
+                form.setValue("birth_month_year", date as Date, { shouldValidate: true, shouldDirty: true });
+              }}
+              placeholder="Select your birth date"
+              className="w-full"
             />
             {form.formState.errors.birth_month_year && (
               <p className="text-destructive text-sm">{form.formState.errors.birth_month_year.message}</p>
@@ -92,12 +116,22 @@ export function BasicProfileStep({ form }: BasicProfileStepProps) {
 
           <div className="space-y-2">
             <Label htmlFor="height" className="text-base font-semibold text-foreground/80">Height *</Label>
-            <Input
-              id="height"
+            <input
+              type="hidden"
               {...form.register("height")}
-              className="h-11"
-              placeholder="e.g., 5'6"
             />
+            <Select onValueChange={(value) => form.setValue("height", value, { shouldValidate: true })}>
+              <SelectTrigger className="h-11">
+                <SelectValue placeholder="Select your height" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {heightOptions.map((height) => (
+                  <SelectItem key={height} value={height}>
+                    {height}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {form.formState.errors.height && (
               <p className="text-destructive text-sm">{form.formState.errors.height.message}</p>
             )}

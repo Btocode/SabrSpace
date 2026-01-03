@@ -184,7 +184,7 @@ export async function registerRoutes(
       let validatedInput;
       try {
         validatedInput = createBiodataSchema.parse(input);
-        console.log('Validated input:', validatedInput);
+        console.log('Schema validation successful');
         console.log('Calling storage.createBiodata with userId:', userId);
         const newBiodata = await storage.createBiodata(userId, validatedInput);
         console.log('Biodata created successfully:', newBiodata);

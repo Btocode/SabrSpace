@@ -233,7 +233,9 @@ export const insertQuestionSchema = createInsertSchema(questions).omit({ id: tru
 export const insertResponseSchema = createInsertSchema(responses).omit({ id: true, setId: true, submittedAt: true });
 export const insertAnswerSchema = createInsertSchema(answers).omit({ id: true, responseId: true });
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
-export const insertBiodataSchema = createInsertSchema(biodata).omit({ id: true, userId: true, token: true, createdAt: true, updatedAt: true, publishedAt: true, reviewedAt: true });
+export const insertBiodataSchema = createInsertSchema(biodata).omit({ id: true, userId: true, token: true, createdAt: true, updatedAt: true, publishedAt: true, reviewedAt: true }).extend({
+  dateOfBirth: z.date()
+});
 export const insertBiodataReviewSchema = createInsertSchema(biodataReviews).omit({ id: true, reviewedAt: true });
 
 // === TYPES ===
@@ -286,14 +288,21 @@ export type ResponseWithDetails = Response & { answers: (Answer & { question: Qu
 // === BIODATA API CONTRACT TYPES ===
 
 // Create Biodata Request
-export const createBiodataSchema = insertBiodataSchema.omit({ 
-  id: true, 
-  userId: true, 
-  token: true, 
-  status: true, 
-  createdAt: true, 
-  updatedAt: true, 
-  publishedAt: true, 
+export const createBiodataSchema = insertBiodataSchema.extend({
+  dateOfBirth: z.union([z.date(), z.string()]).transform((val) => {
+    if (typeof val === 'string') {
+      return new Date(val);
+    }
+    return val;
+  })
+}).omit({
+  id: true,
+  userId: true,
+  token: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+  publishedAt: true,
   reviewedAt: true,
   reviewedBy: true,
   reviewNotes: true,
