@@ -221,9 +221,17 @@ export async function registerRoutes(
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
+      
       const input = req.body;
-      const updatedBiodata = await storage.updateBiodata(Number(req.params.id), userId, input);
-      if (!updatedBiodata) return res.status(404).json({ message: "Biodata not found" });
+      const biodataId = Number(req.params.id);
+      
+      // Update with only the fields provided in the request
+      const updatedBiodata = await storage.updateBiodata(biodataId, userId, input);
+      
+      if (!updatedBiodata) {
+        return res.status(404).json({ message: "Biodata not found or unauthorized" });
+      }
+      
       res.json(updatedBiodata);
     } catch (err) {
       console.error('Biodata update error:', err);

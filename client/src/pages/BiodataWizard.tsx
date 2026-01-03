@@ -334,16 +334,28 @@ export default function BiodataWizard() {
 
   const handleNext = async () => {
     const isValid = await form.trigger();
-    if (!isValid) return;
+    if (!isValid) {
+      console.log("Form validation failed:", form.formState.errors);
+      return;
+    }
 
     const data = form.getValues();
-    await saveStep(data);
+    try {
+      await saveStep(data);
 
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      // Final step completed
-      navigate("/biodata");
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        // Final step completed
+        addToast({
+          type: "success",
+          title: "Biodata completed!",
+          duration: 3000,
+        });
+        navigate("/biodata");
+      }
+    } catch (error) {
+      console.error("Error saving step:", error);
     }
   };
 
