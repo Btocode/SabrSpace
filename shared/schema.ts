@@ -286,7 +286,18 @@ export type ResponseWithDetails = Response & { answers: (Answer & { question: Qu
 // === BIODATA API CONTRACT TYPES ===
 
 // Create Biodata Request
-export const createBiodataSchema = insertBiodataSchema.omit({ id: true, userId: true, token: true, status: true, createdAt: true, updatedAt: true, publishedAt: true, reviewedAt: true });
+export const createBiodataSchema = insertBiodataSchema.omit({ 
+  id: true, 
+  userId: true, 
+  token: true, 
+  status: true, 
+  createdAt: true, 
+  updatedAt: true, 
+  publishedAt: true, 
+  reviewedAt: true,
+  reviewedBy: true,
+  reviewNotes: true
+});
 export type CreateBiodataRequest = z.infer<typeof createBiodataSchema>;
 
 // Update Biodata Request

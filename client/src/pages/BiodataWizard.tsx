@@ -109,6 +109,12 @@ export default function BiodataWizard() {
     defaultValues: savedData[currentStepData.id as keyof StepData] || {},
   });
 
+  // Reset form when step changes or data is loaded
+  useEffect(() => {
+    const stepDefaultValues = savedData[currentStepData.id as keyof StepData] || {};
+    form.reset(stepDefaultValues);
+  }, [currentStep, savedData, currentStepData.id]);
+
   // Load existing biodata if editing
   useEffect(() => {
     const loadExistingData = async () => {

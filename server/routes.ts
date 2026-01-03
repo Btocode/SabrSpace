@@ -184,15 +184,14 @@ export async function registerRoutes(
       try {
         const validatedInput = createBiodataSchema.parse(input);
         console.log('Validated input:', validatedInput);
+        console.log('Calling storage.createBiodata with userId:', userId);
+        const newBiodata = await storage.createBiodata(userId, validatedInput);
+        console.log('Biodata created successfully:', newBiodata);
+        res.status(201).json(newBiodata);
       } catch (validationErr: any) {
         console.error('Validation error:', validationErr.errors);
         return res.status(400).json({ message: "Validation error", errors: validationErr.errors });
       }
-
-      console.log('Calling storage.createBiodata with userId:', userId);
-      const newBiodata = await storage.createBiodata(userId, validatedInput);
-      console.log('Biodata created successfully:', newBiodata);
-      res.status(201).json(newBiodata);
     } catch (err: any) {
       console.error('Biodata creation error:', err);
       console.error('Error details:', err.message);
@@ -222,11 +221,12 @@ export async function registerRoutes(
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
-      const input = req.body; // TODO: Add proper validation
+      const input = req.body;
       const updatedBiodata = await storage.updateBiodata(Number(req.params.id), userId, input);
       if (!updatedBiodata) return res.status(404).json({ message: "Biodata not found" });
       res.json(updatedBiodata);
     } catch (err) {
+      console.error('Biodata update error:', err);
       res.status(500).json({ message: "Internal server error" });
     }
   });

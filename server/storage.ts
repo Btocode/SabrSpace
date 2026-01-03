@@ -297,7 +297,7 @@ export class DatabaseStorage implements IStorage {
 
       console.log('Insert data:', JSON.stringify(insertData, null, 2));
 
-      const [newBiodata] = await db.insert(biodata).values(insertData).returning();
+      const [newBiodata] = await db.insert(biodata).values([insertData]).returning();
       console.log('Biodata created successfully:', newBiodata.id);
       return newBiodata;
     } catch (error) {
@@ -307,6 +307,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateBiodata(id: number, userId: string, data: UpdateBiodataRequest): Promise<Biodata | undefined> {
+    const existing = await this.getBiodata(id);
+    if (!existing || existing.userId !== userId) return undefined;
+
     const [updated] = await db.update(biodata)
       .set({ ...data, updatedAt: new Date() })
       .where(and(eq(biodata.id, id), eq(biodata.userId, userId)))
