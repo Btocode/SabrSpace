@@ -6,14 +6,19 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Plus, 
-  MessageCircle, 
-  Eye, 
-  MoreVertical, 
-  Share2, 
+import {
+  Plus,
+  MessageCircle,
+  Eye,
+  MoreVertical,
+  Share2,
   Trash2,
-  ExternalLink 
+  ExternalLink,
+  X,
+  UserPlus,
+  Heart,
+  Users,
+  Globe
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -21,8 +26,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { useUpgradeModal } from "@/hooks/use-upgrade-modal";
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -38,6 +50,47 @@ export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const deleteSet = useDeleteSet();
   const { toast } = useToast();
+  const { isAnonymous, convertAnonymous, isConvertingAnonymous, user } = useAuth();
+
+  console.log("Dashboard - isAnonymous:", isAnonymous, "user:", user);
+  const { isOpen: showUpgradeModal, openModal: openUpgradeModal, closeModal: closeUpgradeModal } = useUpgradeModal();
+  const [showUpgradeBanner, setShowUpgradeBanner] = useState(false);
+
+  // Manage banner visibility based on auth state and dismissal
+  useEffect(() => {
+    if (!isAnonymous) {
+      setShowUpgradeBanner(false);
+      return;
+    }
+
+    const bannerDismissed = localStorage.getItem('upgrade-banner-dismissed');
+    setShowUpgradeBanner(!bannerDismissed);
+  }, [isAnonymous]);
+  const [upgradeData, setUpgradeData] = useState({ email: '', password: '' });
+
+  const dismissBanner = () => {
+    setShowUpgradeBanner(false);
+    localStorage.setItem('upgrade-banner-dismissed', 'true');
+  };
+
+  const handleUpgradeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await convertAnonymous(upgradeData);
+      toast({
+        title: "Upgrade initiated!",
+        description: "Check your email to complete the account upgrade.",
+      });
+      closeUpgradeModal();
+      setUpgradeData({ email: '', password: '' });
+    } catch (error) {
+      toast({
+        title: "Upgrade failed",
+        description: error instanceof Error ? error.message : "Something went wrong",
+        variant: "destructive",
+      });
+    }
+  };
 
   const copyLink = (token: string) => {
     const url = `${window.location.origin}/s/${token}`;
@@ -48,7 +101,39 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-pattern">
       <Navbar />
-      
+
+      {/* Anonymous User Migration Banner */}
+      {isAnonymous && showUpgradeBanner && (
+        <div className="bg-slate-50 border-b border-slate-200">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="flex items-center gap-2">
+                  <UserPlus className="w-5 h-5 text-slate-600" />
+                  <div className="text-sm">
+                    <span className="text-slate-700 font-medium">Want to create a real account? </span>
+                    <button
+                      onClick={openUpgradeModal}
+                      className="text-primary hover:text-primary/80 underline font-medium"
+                    >
+                      Sign up for full access
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <Button
+                onClick={dismissBanner}
+                variant="ghost"
+                size="sm"
+                className="text-slate-500 hover:text-slate-700 h-8 w-8 p-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Stats Row */}
         <section>
@@ -191,6 +276,87 @@ export default function Dashboard() {
           )}
         </section>
       </main>
+
+      {/* Anonymous User Upgrade Modal */}
+      <Dialog open={showUpgradeModal} onOpenChange={closeUpgradeModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-primary" />
+              Create Your Account
+            </DialogTitle>
+            <DialogDescription>
+              Sign up for a permanent account to access all features and save your data.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleUpgradeSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="modal-email">Email</Label>
+              <Input
+                id="modal-email"
+                type="email"
+                placeholder="your@email.com"
+                value={upgradeData.email}
+                onChange={(e) => setUpgradeData(prev => ({ ...prev, email: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="modal-password">Password</Label>
+              <Input
+                id="modal-password"
+                type="password"
+                placeholder="••••••••"
+                value={upgradeData.password}
+                onChange={(e) => setUpgradeData(prev => ({ ...prev, password: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={isConvertingAnonymous}
+              >
+                {isConvertingAnonymous ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Upgrading...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Upgrade Account
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeUpgradeModal}
+              >
+                Cancel
+              </Button>
+            </div>
+
+            <Alert className="mt-4">
+              <Heart className="h-4 w-4" />
+              <AlertDescription className="text-sm">
+                <strong>Benefits of upgrading:</strong>
+                <ul className="mt-2 space-y-1 text-xs">
+                  <li>• Publish and share your biodata</li>
+                  <li>• Contribute to community discussions</li>
+                  <li>• Access all premium features</li>
+                  <li>• Data persists across devices</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

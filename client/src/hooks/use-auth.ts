@@ -1,53 +1,47 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { User } from "@shared/models/auth";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
-async function fetchUser(): Promise<User | null> {
-  const token = localStorage.getItem('auth_token');
-  if (!token) return null;
+// Supabase user type (compatible with your existing User interface)
+type SupabaseUser = User & {
+  user_metadata?: {
+    firstName?: string;
+    lastName?: string;
+  };
+  is_anonymous?: boolean;
+};
 
-  const response = await fetch("/api/auth/me", {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+async function fetchUser(): Promise<SupabaseUser | null> {
+  const { data: { user }, error } = await supabase.auth.getUser();
 
-  if (response.status === 401) {
-    localStorage.removeItem('auth_token');
+  if (error || !user) {
     return null;
   }
 
-  if (!response.ok) {
-    throw new Error(`${response.status}: ${response.statusText}`);
-  }
-
-  return response.json();
+  // Transform Supabase user to match your existing User interface
+  return {
+    id: user.id,
+    email: user.email || '',
+    firstName: user.user_metadata?.firstName || 'Anonymous',
+    lastName: user.user_metadata?.lastName || 'User',
+    profileImageUrl: user.user_metadata?.avatar_url || null,
+    is_anonymous: user.is_anonymous || false,
+  } as SupabaseUser;
 }
 
 async function logout(): Promise<void> {
-  try {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      // Call logout endpoint to deactivate anonymous sessions
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-    }
-  } catch (error) {
-    console.error("Logout API call failed:", error);
-    // Continue with local logout even if API call fails
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error("Supabase logout error:", error);
   }
-
-  localStorage.removeItem('auth_token');
+  // Force page reload to clear all state
   window.location.reload();
 }
 
 export function useAuth() {
   const queryClient = useQueryClient();
-  const { data: user, isLoading } = useQuery<User | null>({
-    queryKey: ["/api/auth/me"],
+  const { data: user, isLoading } = useQuery<SupabaseUser | null>({
+    queryKey: ["supabase-auth"],
     queryFn: fetchUser,
     retry: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -55,94 +49,173 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
+      if (error) {
         throw new Error(error.message);
       }
 
-      const data = await response.json();
-      localStorage.setItem('auth_token', data.token);
-      return data.user;
+      // Transform Supabase user to match your interface
+      return {
+        id: data.user!.id,
+        email: data.user!.email || '',
+        firstName: data.user!.user_metadata?.firstName || 'User',
+        lastName: data.user!.user_metadata?.lastName || '',
+        profileImageUrl: data.user!.user_metadata?.avatar_url || null,
+        is_anonymous: false,
+      };
     },
     onSuccess: (user) => {
-      queryClient.setQueryData(["/api/auth/me"], user);
+      queryClient.setQueryData(["supabase-auth"], user);
     },
   });
 
   const registerMutation = useMutation({
     mutationFn: async (userData: { email: string; password: string; firstName: string; lastName?: string }) => {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
+      const { data, error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          data: {
+            firstName: userData.firstName,
+            lastName: userData.lastName || '',
+          },
+        },
       });
 
-      if (!response.ok) {
-        const error = await response.json();
+      if (error) {
         throw new Error(error.message);
       }
 
-      const data = await response.json();
-      localStorage.setItem('auth_token', data.token);
-      return data.user;
+      // For Supabase, user might need email confirmation
+      if (!data.user) {
+        throw new Error("Registration failed - please check your email for confirmation");
+      }
+
+      return {
+        id: data.user.id,
+        email: data.user.email || '',
+        firstName: userData.firstName,
+        lastName: userData.lastName || '',
+        profileImageUrl: null,
+        is_anonymous: false,
+      };
     },
     onSuccess: (user) => {
-      queryClient.setQueryData(["/api/auth/me"], user);
+      queryClient.setQueryData(["supabase-auth"], user);
+    },
+  });
+
+  const oauthLoginMutation = useMutation({
+    mutationFn: async (provider: 'google' | 'github' | 'discord') => {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // OAuth will redirect, so we don't return user data here
+      return data;
     },
   });
 
   const anonymousLoginMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/auth/anonymous", {
-        method: "POST",
-      });
+      const { data, error } = await supabase.auth.signInAnonymously();
 
-      if (!response.ok) {
-        const error = await response.json();
+      if (error) {
         throw new Error(error.message);
       }
 
-      const data = await response.json();
-      localStorage.setItem('auth_token', data.token);
-
-      // Log if this is a returning session
-      if (data.isReturningSession) {
-        console.log("Welcome back! Continuing your anonymous session.");
-      } else {
-        console.log("New anonymous session created.");
+      if (!data.user) {
+        throw new Error("Anonymous login failed");
       }
 
-      return data.user;
+      console.log("Anonymous session created with Supabase");
+
+      return {
+        id: data.user.id,
+        email: '',
+        firstName: 'Anonymous',
+        lastName: 'User',
+        profileImageUrl: null,
+        is_anonymous: true,
+      };
     },
     onSuccess: (user) => {
-      queryClient.setQueryData(["/api/auth/me"], user);
+      queryClient.setQueryData(["supabase-auth"], user);
+    },
+  });
+
+  const convertAnonymousMutation = useMutation({
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      // 1. Update user with email (this sends verification email)
+      const { data: updateData, error: updateError } = await supabase.auth.updateUser({
+        email: credentials.email,
+      });
+
+      if (updateError) {
+        throw new Error(`Failed to update email: ${updateError.message}`);
+      }
+
+      // 2. Note: User needs to verify email before setting password
+      // In a real app, you'd want to handle email verification flow
+      console.log('Email update initiated. User needs to verify email before setting password.');
+
+      return { success: true, message: 'Check your email to verify and complete account setup.' };
+    },
+  });
+
+  const linkOAuthMutation = useMutation({
+    mutationFn: async (provider: 'google' | 'github' | 'discord') => {
+      const { data, error } = await supabase.auth.linkIdentity({
+        provider: provider
+      });
+
+      if (error) {
+        throw new Error(`Failed to link ${provider}: ${error.message}`);
+      }
+
+      return data;
     },
   });
 
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      queryClient.setQueryData(["/api/auth/me"], null);
+      queryClient.setQueryData(["supabase-auth"], null);
     },
   });
+
+  // Check if current user is anonymous
+  const isAnonymous = user && user.is_anonymous;
 
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
+    isAnonymous,
     login: loginMutation.mutateAsync,
     register: registerMutation.mutateAsync,
     loginAnonymously: anonymousLoginMutation.mutateAsync,
+    loginWithOAuth: oauthLoginMutation.mutateAsync,
+    convertAnonymous: convertAnonymousMutation.mutateAsync,
+    linkOAuth: linkOAuthMutation.mutateAsync,
     logout: logoutMutation.mutate,
     isLoggingIn: loginMutation.isPending,
     isRegistering: registerMutation.isPending,
     isLoggingInAnonymously: anonymousLoginMutation.isPending,
+    isLoggingInWithOAuth: oauthLoginMutation.isPending,
+    isConvertingAnonymous: convertAnonymousMutation.isPending,
+    isLinkingOAuth: linkOAuthMutation.isPending,
     isLoggingOut: logoutMutation.isPending,
   };
 }
