@@ -36,17 +36,22 @@ export default function Home() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <Link href="/create">
+                <Link href="/biodata/create">
                   <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                    {t("hero.cta")}
+                    Create Biodata
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
-                <a href="#features">
-                  <Button variant="ghost" size="lg" className="h-14 px-8 text-lg rounded-full">
-                    {t("hero.secondary")}
+                <Link href="/create">
+                  <Button variant="outline" size="lg" className="h-14 px-8 text-lg rounded-full border-primary/20 hover:bg-primary/5">
+                    Ask Questions
                   </Button>
-                </a>
+                </Link>
+                <Link href="/community">
+                  <Button variant="ghost" size="lg" className="h-14 px-8 text-lg rounded-full">
+                    Join Community
+                  </Button>
+                </Link>
               </div>
             </motion.div>
           </div>
@@ -60,26 +65,34 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 font-serif">
-                {t("features.title")}
+                Everything you need for a blessed journey
               </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Discover tools designed for the modern Muslim, blending tradition with elegant technology.
+              </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              {              [
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {[
                 {
                   icon: <ShieldCheck className="w-8 h-8 text-teal-600" />,
-                  title: t("features.private.title"),
-                  desc: t("features.private.desc")
+                  title: "Premium Biodata Builder",
+                  desc: "Create a detailed 8-step marriage biodata with religious markers, family details, and lifestyle preferences. Save drafts and edit anytime."
                 },
                 {
                   icon: <MessageSquare className="w-8 h-8 text-amber-600" />,
-                  title: t("features.honest.title"),
-                  desc: t("features.honest.desc")
+                  title: "Anonymous Question Sets",
+                  desc: "Ask the questions that matter most. Collect responses anonymously or named, with optional religious attestation for total honesty."
                 },
                 {
                   icon: <Heart className="w-8 h-8 text-rose-500" />,
-                  title: t("features.clean.title"),
-                  desc: t("features.clean.desc")
+                  title: "Sabr Community Feed",
+                  desc: "Engage with a respectful community. View biodata summaries, participate in discussions, and vote on community questions."
+                },
+                {
+                  icon: <MessageSquare className="w-8 h-8 text-primary" />,
+                  title: "Islamic Wisdom",
+                  desc: "Experience the feed enriched with AI-curated Quranic verses, Hadiths, and timeless Islamic quotes for daily inspiration."
                 }
               ].map((feature, i) => (
                 <motion.div
@@ -88,12 +101,12 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
                   viewport={{ once: true }}
-                  className="bg-white p-8 rounded-2xl shadow-sm border border-border/50 hover:shadow-md transition-shadow"
+                  className="bg-white p-8 rounded-2xl shadow-sm border border-border/50 hover:shadow-md transition-shadow flex flex-col items-center text-center"
                 >
-                  <div className="w-14 h-14 rounded-xl bg-background flex items-center justify-center mb-6 shadow-inner">
+                  <div className="w-16 h-16 rounded-2xl bg-background flex items-center justify-center mb-6 shadow-inner">
                     {feature.icon}
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                  <h3 className="text-xl font-bold mb-3 font-serif">{feature.title}</h3>
                   <p className="text-muted-foreground leading-relaxed">{feature.desc}</p>
                 </motion.div>
               ))}
