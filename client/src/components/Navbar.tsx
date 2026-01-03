@@ -9,7 +9,8 @@ import {
   PlusCircle,
   Languages,
   Heart,
-  UserPlus
+  UserPlus,
+  MessageCircle
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -24,6 +25,9 @@ export function Navbar() {
   const { openModal } = useUpgradeModal();
   const { t, locale, setLocale } = useLanguage();
   const [location] = useLocation();
+
+  const profileImageUrl = (user as any)?.profileImageUrl ?? (user as any)?.user_metadata?.profileImageUrl;
+  const firstName = (user as any)?.firstName ?? (user as any)?.user_metadata?.firstName;
 
   const toggleLanguage = () => {
     setLocale(locale === 'en' ? 'bn' : 'en');
@@ -76,6 +80,17 @@ export function Navbar() {
                 </Button>
               </Link>
 
+              <Link href="/community">
+                <Button
+                  variant={location === "/community" ? "secondary" : "ghost"}
+                  size="sm"
+                  className="hidden md:flex"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Community
+                </Button>
+              </Link>
+
               <Link href="/create">
                 <Button
                   variant="default"
@@ -91,9 +106,9 @@ export function Navbar() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                     <Avatar className="h-9 w-9 border border-border">
-                      <AvatarImage src={user?.profileImageUrl || undefined} alt={user?.firstName || "User"} />
+                      <AvatarImage src={profileImageUrl || undefined} alt={firstName || "User"} />
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {user?.firstName?.[0] || "U"}
+                        {firstName?.[0] || "U"}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -109,6 +124,12 @@ export function Navbar() {
                     <Link href="/biodata" className="cursor-pointer md:hidden">
                       <Heart className="mr-2 h-4 w-4" />
                       Biodata
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/community" className="cursor-pointer md:hidden">
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Community
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

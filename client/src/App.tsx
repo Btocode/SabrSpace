@@ -20,6 +20,7 @@ import DemoWizard from "@/pages/DemoWizard";
 import Login from "@/pages/Login";
 import BiodataList from "@/pages/BiodataList";
 import BiodataWizard from "@/pages/BiodataWizard";
+import Community from "@/pages/Community";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -80,6 +81,10 @@ function Router() {
       </Route>
       <Route path="/biodata/create">
         {() => <ProtectedRoute component={BiodataWizard} />}
+      </Route>
+
+      <Route path="/community">
+        {() => <ProtectedRoute component={Community} />}
       </Route>
 
       <Route component={NotFound} />
