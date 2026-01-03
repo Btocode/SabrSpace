@@ -28,8 +28,43 @@ export default function SetResponses() {
       
       <main className="container mx-auto px-4 py-8">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold font-serif text-primary mb-2">{set.title}</h1>
-          <p className="text-muted-foreground max-w-2xl">{set.description}</p>
+          <h1 className="text-3xl font-bold font-serif text-primary mb-2">
+            Responses for {set.questionerName}'s Questions
+          </h1>
+          <div className="flex items-center gap-4 mt-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <MessageSquareQuote className="w-4 h-4" />
+              <span>{set.questions?.length || 0} questions</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Globe className="w-4 h-4" />
+              <span>{set.views} public views</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="w-4 h-4" />
+              <span>{format(new Date(set.createdAt!), "PPP")}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-3">
+            {set.requireAttestation && (
+              <Badge variant="outline" className="text-amber-700 border-amber-200">
+                Islamic Oath Required
+              </Badge>
+            )}
+            {set.curatorEmail && (
+              <Badge variant="outline" className="text-emerald-700 border-emerald-200">
+                Questioner Curator: {set.curatorEmail}
+              </Badge>
+            )}
+            {set.answererCuratorEmail && (
+              <Badge variant="outline" className="text-blue-700 border-blue-200">
+                Answerer Curator: {set.answererCuratorEmail}
+              </Badge>
+            )}
+            {!set.isOpen && (
+              <Badge variant="secondary">Closed</Badge>
+            )}
+          </div>
         </header>
 
         <div className="grid lg:grid-cols-4 gap-8">

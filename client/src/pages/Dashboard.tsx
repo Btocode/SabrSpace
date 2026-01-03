@@ -231,6 +231,157 @@ export default function Dashboard() {
           </div>
         </section>
 
+        
+
+        {/* Sets List */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold font-serif">Your Question Sets</h2>
+            <Button className="rounded-full" asChild>
+              <Link href="/create">
+                <Plus className="w-4 h-4 mr-2" />
+                {t("set.create")}
+              </Link>
+            </Button>
+          </div>
+
+          {setsLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
+            </div>
+          ) : sets?.length === 0 ? (
+            <Card className="glass-panel border-dashed border-2 border-primary/20 rounded-2xl">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="text-center space-y-4">
+                  <div className="text-4xl">📝</div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold">No question sets yet</h3>
+                    <p className="text-muted-foreground text-sm max-w-sm">
+                      Create your first question set to start collecting responses from your community.
+                    </p>
+                  </div>
+                  <Button className="rounded-full" asChild>
+                    <Link href="/create">
+                      <Plus className="w-4 h-4 mr-2" />
+                      {t("set.create")}
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {sets?.map((set) => (
+                <Card key={set.id} className="overflow-hidden border-primary/20 rounded-2xl hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer group">
+                  <Link href={`/sets/${set.id}`} className="block">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+                              <MessageCircle className="h-5 w-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors truncate">
+                                Questions by {set.questionerName}
+                              </h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                {!set.isOpen && (
+                                  <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">
+                                    Closed
+                                  </span>
+                                )}
+                                {set.requireAttestation && (
+                                  <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-xs font-medium border border-amber-200">
+                                    Islamic Oath Required
+                                  </span>
+                                )}
+                                {set.curatorEmail && (
+                                  <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
+                                    Questioner Curator
+                                  </span>
+                                )}
+                                {set.answererCuratorEmail && (
+                                  <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200">
+                                    Answerer Curator
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Eye className="w-4 h-4" />
+                              <span>{set.views} views</span>
+                            </div>
+                            <div className="text-xs">
+                              {format(new Date(set.createdAt!), "MMM d, yyyy")}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-primary hover:text-primary hover:bg-primary/10"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              copyLink(set.token);
+                            }}
+                          >
+                            <Share2 className="w-4 h-4 mr-1" />
+                            Share
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" onClick={(e) => e.preventDefault()}>
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link href={`/sets/${set.id}`} className="cursor-pointer">
+                                  View Responses
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <a
+                                  href={`/s/${set.token}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="cursor-pointer"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <ExternalLink className="w-4 h-4 mr-2" />
+                                  Public Page
+                                </a>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  deleteSet.mutate(set.id);
+                                }}
+                                className="text-destructive focus:text-destructive cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Link>
+                </Card>
+              ))}
+            </div>
+          )}
+        </section>
+
         {/* Feature Highlights */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold mb-6 font-serif">Islamic Marriage Features</h2>
@@ -325,110 +476,6 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
-        </section>
-
-        {/* Sets List */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold font-serif">Your Question Sets</h2>
-            <Button className="rounded-full" asChild>
-              <Link href="/create">
-                <Plus className="w-4 h-4 mr-2" />
-                {t("set.create")}
-              </Link>
-            </Button>
-          </div>
-
-          {setsLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
-            </div>
-          ) : sets?.length === 0 ? (
-            <Card className="glass-panel border-dashed border-2 border-primary/20 rounded-2xl">
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <div className="text-center space-y-4">
-                  <div className="text-4xl">📝</div>
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold">No question sets yet</h3>
-                    <p className="text-muted-foreground text-sm max-w-sm">
-                      Create your first question set to start collecting responses from your community.
-                    </p>
-                  </div>
-                  <Button className="rounded-full" asChild>
-                    <Link href="/create">
-                      <Plus className="w-4 h-4 mr-2" />
-                      {t("set.create")}
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4">
-              {sets?.map((set) => (
-                <Card key={set.id} className="overflow-hidden border-primary/20 rounded-2xl hover:shadow-md transition-shadow">
-                  <CardContent className="p-0">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-amber-500/5" />
-                      <div className="relative p-6 flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Link href={`/sets/${set.id}`} className="font-bold text-lg hover:text-primary hover:underline">
-                          {set.title}
-                        </Link>
-                        {!set.isOpen && (
-                          <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">{t("dashboard.closed")}</span>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-1">{set.description}</p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
-                        <span>{format(new Date(set.createdAt!), "MMM d, yyyy")}</span>
-                        <span className="w-1 h-1 rounded-full bg-border" />
-                        <span className="flex items-center gap-1">
-                          <Eye className="w-3 h-3" /> {set.views}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => copyLink(set.token)} title={t("dashboard.share")}>
-                        <Share2 className="w-4 h-4 text-muted-foreground" />
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/sets/${set.id}`} className="cursor-pointer">
-                              {t("dashboard.viewResponses")}
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <a href={`/s/${set.token}`} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
-                              <ExternalLink className="w-4 h-4 mr-2" />
-                              {t("dashboard.viewPublicPage")}
-                            </a>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => deleteSet.mutate(set.id)}
-                            className="text-destructive focus:text-destructive cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            {t("dashboard.delete")}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
         </section>
       </main>
 

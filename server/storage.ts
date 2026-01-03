@@ -1,6 +1,7 @@
-import { 
-  db 
+import {
+  db
 } from "./db";
+import { getTableColumns, sql } from "drizzle-orm";
 import {
   users, questionSets, questions, responses, answers, notifications, biodata, biodataReviews,
   type User, type QuestionSet, type Question, type Response, type Answer, type Notification, type Biodata, type BiodataReview,
@@ -8,7 +9,7 @@ import {
   type CreateSetRequest, type UpdateSetRequest, type SubmitResponseRequest, type CreateBiodataRequest, type UpdateBiodataRequest, type PublishBiodataRequest,
   type QuestionSetWithQuestions, type ResponseWithDetails, type BiodataWithDetails
 } from "@shared/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
 export interface IStorage {
@@ -169,8 +170,19 @@ export class DatabaseStorage implements IStorage {
     await db.delete(questionSets).where(eq(questionSets.id, id));
   }
 
-  async listQuestionSets(userId: string): Promise<QuestionSet[]> {
-    return await db.select().from(questionSets).where(eq(questionSets.userId, userId));
+  async listQuestionSets(userId: string): Promise<(QuestionSet & { questionCount: number })[]> {
+    // Get question sets with question counts
+    const setsWithCounts = await db
+      .select({
+        ...getTableColumns(questionSets),
+        questionCount: sql<number>`count(${questions.id})`.as('questionCount'),
+      })
+      .from(questionSets)
+      .leftJoin(questions, eq(questionSets.id, questions.setId))
+      .where(eq(questionSets.userId, userId))
+      .groupBy(questionSets.id);
+
+    return setsWithCounts;
   }
 
   async regenerateToken(id: number, userId: string): Promise<string> {
