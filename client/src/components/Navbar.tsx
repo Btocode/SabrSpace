@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useUpgradeModal } from "@/hooks/use-upgrade-modal";
 import { useLanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,7 +8,8 @@ import {
   LogOut,
   PlusCircle,
   Languages,
-  Heart
+  Heart,
+  UserPlus
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -18,7 +20,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Navbar() {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, isAnonymous } = useAuth();
+  const { openModal } = useUpgradeModal();
   const { t, locale, setLocale } = useLanguage();
   const [location] = useLocation();
 
@@ -114,6 +117,15 @@ export function Navbar() {
                       {t("nav.create")}
                     </Link>
                   </DropdownMenuItem>
+                  {isAnonymous && (
+                    <DropdownMenuItem
+                      onClick={openModal}
+                      className="text-primary focus:text-primary cursor-pointer"
+                    >
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Become a Real User
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:text-destructive cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />
                     {t("nav.logout")}

@@ -181,8 +181,9 @@ export async function registerRoutes(
       const input = req.body;
       console.log('Biodata creation input:', JSON.stringify(input, null, 2));
 
+      let validatedInput;
       try {
-        const validatedInput = createBiodataSchema.parse(input);
+        validatedInput = createBiodataSchema.parse(input);
         console.log('Validated input:', validatedInput);
         console.log('Calling storage.createBiodata with userId:', userId);
         const newBiodata = await storage.createBiodata(userId, validatedInput);

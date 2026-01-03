@@ -6,7 +6,10 @@ import { ToastProvider } from "@/components/ui/toast-custom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
+import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import type { ReactNode } from "react";
 
 import Home from "@/pages/Home";
 import Dashboard from "@/pages/Dashboard";
@@ -20,9 +23,9 @@ import BiodataWizard from "@/pages/BiodataWizard";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
 
-  console.log("ProtectedRoute - user:", user, "isLoading:", isLoading);
+  console.log("ProtectedRoute - user:", user, "isLoading:", isLoading, "isAuthenticated:", isAuthenticated);
 
   if (isLoading) {
     return (
@@ -32,15 +35,26 @@ function ProtectedRoute({ component: Component, ...rest }: any) {
     );
   }
 
-  if (!user) {
-    // Redirect to login if not authenticated
-    console.log("No user, redirecting to login");
+  if (!isAuthenticated) {
+    // Redirect to login if not authenticated at all
+    console.log("Not authenticated, redirecting to login");
     window.location.href = "/login";
     return null;
   }
 
   console.log("User authenticated, rendering component");
   return <Component />;
+}
+
+function SupabaseAuthProvider({ children }: { children: ReactNode }) {
+  const { initialize } = useSupabaseAuth();
+
+  useEffect(() => {
+    // Initialize Supabase auth state on app start
+    initialize();
+  }, [initialize]);
+
+  return <>{children}</>;
 }
 
 function Router() {
@@ -76,16 +90,18 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <TooltipProvider>
-          <ToastProvider>
-            <div className="min-h-screen bg-background text-foreground selection:bg-primary/20">
-              <Router />
-              <Toaster />
-            </div>
-          </ToastProvider>
-        </TooltipProvider>
-      </LanguageProvider>
+      <SupabaseAuthProvider>
+        <LanguageProvider>
+          <TooltipProvider>
+            <ToastProvider>
+              <div className="min-h-screen bg-background text-foreground selection:bg-primary/20">
+                <Router />
+                <Toaster />
+              </div>
+            </ToastProvider>
+          </TooltipProvider>
+        </LanguageProvider>
+      </SupabaseAuthProvider>
     </QueryClientProvider>
   );
 }

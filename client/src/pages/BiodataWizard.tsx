@@ -1,833 +1,901 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
-import { useLanguage } from "@/lib/i18n";
+
+import { Navbar } from "@/components/Navbar";
 import { api } from "@shared/routes";
 import { useToast } from "@/components/ui/toast-custom";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import {
+  BasicProfileStep,
+  AddressStep,
+  EducationStep,
+  FamilyInfoStep,
+  PersonalReligiousStep,
+  CareerIncomeStep,
+  MarriagePreferencesStep,
+  DeclarationsStep,
+  BasicProfileData,
+  AddressData,
+  EducationData,
+  FamilyInfoData,
+  PersonalReligiousData,
+  CareerIncomeData,
+  MarriagePreferencesData,
+  DeclarationsData,
+} from "@/components/biodata";
+import { useBiodataWizardStore } from "@/stores/biodataWizardStore";
 
-// Step schemas
-const basicInfoSchema = z.object({
-  fullName: z.string().min(1, "Full name is required"),
-  gender: z.enum(["male", "female"]),
-  dateOfBirth: z.string().optional(),
-  height: z.string().optional(),
-  weight: z.string().optional(),
-  complexion: z.enum(["fair", "wheatish", "dark"]).optional(),
-  bloodGroup: z.string().optional(),
+import {
+  Save,
+  CheckCircle,
+  Share2,
+  Copy,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+
+// Step schemas with improved validation
+const basicProfileSchema = z.object({
+  fullName: z
+    .string()
+    .min(2, "Full name must be at least 2 characters")
+    .max(100, "Full name must be less than 100 characters")
+    .regex(/^[a-zA-Z\s]+$/, "Full name can only contain letters and spaces"),
+  biodata_type: z.enum(["groom", "bride"], {
+    required_error: "Please select if you are looking for a groom or bride",
+  }),
+  marital_status: z.enum(["unmarried", "married", "divorced", "widowed"], {
+    required_error: "Marital status is required",
+  }),
+  birth_month_year: z
+    .string()
+    .min(3, "Birth month and year is required")
+    .max(50, "Invalid birth date format"),
+  height: z
+    .string()
+    .min(1, "Height is required")
+    .regex(/^\d+'\d+"?$/, `Height must be in format like 5'6"`),
+  weight: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^\d+\s*(kg|lbs)?$/.test(val),
+      "Weight must be a number with optional unit (kg/lbs)",
+    ),
+  complexion: z.enum(["fair", "wheatish", "dusky"]).optional(),
+  blood_group: z
+    .enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"], {
+      errorMap: () => ({ message: "Please select a valid blood group" }),
+    })
+    .optional(),
+  nationality: z
+    .string()
+    .max(50, "Nationality must be less than 50 characters")
+    .default("Bangladeshi"),
+});
+
+const addressSchema = z.object({
+  permanent_address: z.object({
+    country: z
+      .string()
+      .min(2, "Country is required")
+      .max(50, "Country name too long"),
+    division: z
+      .string()
+      .min(2, "Division is required")
+      .max(50, "Division name too long"),
+    district: z
+      .string()
+      .min(2, "District is required")
+      .max(50, "District name too long"),
+    upazila_thana: z
+      .string()
+      .min(2, "Upazila/Thana is required")
+      .max(50, "Upazila/Thana name too long"),
+    city_corp: z.string().max(50, "City Corporation name too long").optional(),
+    area_name: z.string().max(100, "Area name too long").optional(),
+  }),
+  current_address: z.object({
+    country: z
+      .string()
+      .min(2, "Country is required")
+      .max(50, "Country name too long"),
+    division: z
+      .string()
+      .min(2, "Division is required")
+      .max(50, "Division name too long"),
+    district: z
+      .string()
+      .min(2, "District is required")
+      .max(50, "District name too long"),
+    upazila_thana: z
+      .string()
+      .min(2, "Upazila/Thana is required")
+      .max(50, "Upazila/Thana name too long"),
+    city_corp: z.string().max(50, "City Corporation name too long").optional(),
+    area_name: z.string().max(100, "Area name too long").optional(),
+  }),
+  where_grew_up: z.string().max(500, "Description too long").optional(),
 });
 
 const educationSchema = z.object({
-  educationLevel: z.string().optional(),
-  educationDetails: z.string().optional(),
-  profession: z.string().optional(),
-  occupation: z.string().optional(),
-  annualIncome: z.string().optional(),
-  workLocation: z.string().optional(),
+  education_medium: z.enum(["general", "madrasa", "english_medium"]).optional(),
+  ssc_year: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^\d{4}$/.test(val),
+      "SSC year must be a valid 4-digit year",
+    ),
+  ssc_group: z.string().max(50, "SSC group name too long").optional(),
+  ssc_result: z
+    .string()
+    .max(20, "SSC result too long")
+    .refine(
+      (val) => !val || /^(\d+\.?\d*|\d*\.?\d+)$/.test(val),
+      "SSC result must be a valid number",
+    )
+    .optional(),
+  hsc_year: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^\d{4}$/.test(val),
+      "HSC year must be a valid 4-digit year",
+    ),
+  hsc_group: z.string().max(50, "HSC group name too long").optional(),
+  hsc_result: z
+    .string()
+    .max(20, "HSC result too long")
+    .refine(
+      (val) => !val || /^(\d+\.?\d*|\d*\.?\d+)$/.test(val),
+      "HSC result must be a valid number",
+    )
+    .optional(),
+  higher_education: z
+    .array(
+      z.object({
+        level: z.enum(["bachelor", "master", "phd"]).optional(),
+        subject: z.string().max(100, "Subject name too long").optional(),
+        institution: z
+          .string()
+          .max(200, "Institution name too long")
+          .optional(),
+        passing_year: z
+          .string()
+          .refine(
+            (val) => !val || /^\d{4}$/.test(val),
+            "Passing year must be a valid 4-digit year",
+          )
+          .optional(),
+        result: z.string().max(50, "Result description too long").optional(),
+      }),
+    )
+    .default([]),
 });
 
 const familySchema = z.object({
-  fatherName: z.string().optional(),
-  fatherOccupation: z.string().optional(),
-  motherName: z.string().optional(),
-  motherOccupation: z.string().optional(),
-  siblingsCount: z.number().optional(),
-  siblingsDetails: z.string().optional(),
+  father: z.object({
+    alive: z.boolean().default(true),
+    occupation: z
+      .string()
+      .max(100, "Father's occupation description too long")
+      .optional(),
+  }),
+  mother: z.object({
+    alive: z.boolean().default(true),
+    occupation: z
+      .string()
+      .max(100, "Mother's occupation description too long")
+      .optional(),
+  }),
+  siblings: z.object({
+    brothers_count: z
+      .number()
+      .min(0)
+      .max(20, "Invalid number of brothers")
+      .default(0),
+    sisters_count: z
+      .number()
+      .min(0)
+      .max(20, "Invalid number of sisters")
+      .default(0),
+    details: z.string().max(500, "Siblings details too long").optional(),
+  }),
+  extended_family_summary: z
+    .string()
+    .max(500, "Extended family summary too long")
+    .optional(),
+  economic_status: z
+    .enum(["lower", "lower_middle", "middle", "upper_middle"])
+    .optional(),
+  economic_description: z
+    .string()
+    .max(300, "Economic description too long")
+    .optional(),
+  family_religious_environment: z
+    .string()
+    .max(500, "Religious environment description too long")
+    .optional(),
 });
 
-const religiousSchema = z.object({
-  religion: z.string().default("islam"),
-  sect: z.string().optional(),
-  religiousPractice: z.enum(["regular", "occasional", "minimal"]).optional(),
-  prayerFrequency: z.enum(["5_times", "3_times", "occasional"]).optional(),
-  fasting: z.enum(["ramadan_only", "regular", "occasional"]).optional(),
-  quranReading: z.enum(["daily", "weekly", "occasional", "rarely"]).optional(),
+const personalReligiousSchema = z.object({
+  clothing_style: z
+    .string()
+    .max(300, "Clothing style description too long")
+    .optional(),
+  sunnati_beard_or_hijab: z
+    .string()
+    .max(300, "Beard/Hijab description too long")
+    .optional(),
+  clothes_above_ankle: z.boolean().default(false),
+  five_times_prayer: z.enum(["yes", "trying", "no"]).optional(),
+  qaza_frequency: z
+    .string()
+    .max(100, "Qaza frequency description too long")
+    .optional(),
+  mahram_non_mahram: z.enum(["strict", "trying", "casual"]).optional(),
+  quran_tilawat: z.boolean().default(false),
+  fiqh: z.enum(["hanafi", "shafi", "maliki", "hanbali", "other"]).optional(),
+  entertainment_habit: z
+    .string()
+    .max(300, "Entertainment habit description too long")
+    .optional(),
+  health_notes: z.string().max(500, "Health notes too long").optional(),
+  islamic_books: z
+    .string()
+    .max(300, "Islamic books description too long")
+    .optional(),
+  favorite_scholars: z
+    .string()
+    .max(300, "Favorite scholars description too long")
+    .optional(),
+  hobbies: z.string().max(500, "Hobbies description too long").optional(),
 });
 
-const preferencesSchema = z.object({
-  maritalStatus: z.enum(["never_married", "divorced", "widowed"]).default("never_married"),
-  willingToRelocate: z.boolean().default(false),
-  preferredAgeMin: z.number().optional(),
-  preferredAgeMax: z.number().optional(),
-  preferredEducation: z.string().optional(),
-  preferredProfession: z.string().optional(),
-  preferredLocation: z.string().optional(),
-  otherPreferences: z.string().optional(),
+const careerSchema = z.object({
+  occupation_title: z.string().max(100, "Occupation title too long").optional(),
+  occupation_details: z
+    .string()
+    .max(500, "Occupation details too long")
+    .optional(),
+  monthly_income: z
+    .number()
+    .min(0)
+    .max(10000000, "Income amount too high")
+    .optional(),
+  workplace_city: z
+    .string()
+    .max(100, "Workplace city name too long")
+    .optional(),
+  experience_years: z
+    .number()
+    .min(0)
+    .max(70, "Invalid experience years")
+    .optional(),
 });
 
-const additionalSchema = z.object({
-  hobbies: z.string().optional(),
-  languages: z.string().optional(),
-  aboutMe: z.string().optional(),
-  expectations: z.string().optional(),
+const marriageSchema = z.object({
+  marriage_related: z.object({
+    guardian_agrees: z.boolean().default(false),
+    can_support_purdah: z.boolean().default(false),
+    allow_study: z
+      .string()
+      .max(300, "Study allowance explanation too long")
+      .optional(),
+    allow_work: z
+      .string()
+      .max(300, "Work allowance explanation too long")
+      .optional(),
+    after_marriage_location: z
+      .string()
+      .max(300, "Marriage location description too long")
+      .optional(),
+    gifts_expectation: z.boolean().default(false),
+    why_marriage_view: z
+      .string()
+      .max(500, "Marriage view description too long")
+      .optional(),
+  }),
+  desired_spouse: z.object({
+    age_range: z
+      .string()
+      .max(20, "Age range too long")
+      .refine(
+        (val) => !val || /^\d{1,2}-\d{1,2}$/.test(val),
+        "Age range must be in format like 22-28",
+      )
+      .optional(),
+    height_range: z.string().max(20, "Height range too long").optional(),
+    complexion: z
+      .string()
+      .max(50, "Complexion description too long")
+      .optional(),
+    education: z.string().max(100, "Education preference too long").optional(),
+    district_preference: z
+      .string()
+      .max(300, "District preference too long")
+      .optional(),
+    marital_status: z
+      .string()
+      .max(50, "Marital status preference too long")
+      .optional(),
+    occupation: z
+      .string()
+      .max(100, "Occupation preference too long")
+      .optional(),
+    economic_status: z
+      .string()
+      .max(50, "Economic status preference too long")
+      .optional(),
+    desired_qualities: z
+      .string()
+      .max(1000, "Desired qualities description too long")
+      .optional(),
+  }),
 });
 
+const declarationSchema = z.object({
+  guardian_knows_submission: z.boolean().default(false),
+  swear_true: z.boolean().default(false),
+  agree_disclaimer: z.boolean().default(false),
+  verification_status: z
+    .enum(["pending", "approved", "not_approved"])
+    .default("pending"),
+});
+
+// Steps configuration
 const steps = [
-  { id: "basic", title: "Basic Information", schema: basicInfoSchema },
-  { id: "education", title: "Education & Career", schema: educationSchema },
-  { id: "family", title: "Family Details", schema: familySchema },
-  { id: "religious", title: "Religious Information", schema: religiousSchema },
-  { id: "preferences", title: "Marriage Preferences", schema: preferencesSchema },
-  { id: "additional", title: "Additional Information", schema: additionalSchema },
+  { id: "basic_profile", title: "Basic Profile", schema: basicProfileSchema },
+  { id: "address", title: "Address & Location", schema: addressSchema },
+  { id: "education", title: "Education", schema: educationSchema },
+  { id: "family", title: "Family Info", schema: familySchema },
+  {
+    id: "personal_religious",
+    title: "Personal & Religious Practice",
+    schema: personalReligiousSchema,
+  },
+  { id: "career", title: "Career & Income", schema: careerSchema },
+  {
+    id: "marriage",
+    title: "Marriage Plan & Preferences",
+    schema: marriageSchema,
+  },
+  {
+    id: "declaration",
+    title: "Declarations & Verification",
+    schema: declarationSchema,
+  },
 ];
 
-type StepData = {
-  basic: z.infer<typeof basicInfoSchema>;
-  education: z.infer<typeof educationSchema>;
-  family: z.infer<typeof familySchema>;
-  religious: z.infer<typeof religiousSchema>;
-  preferences: z.infer<typeof preferencesSchema>;
-  additional: z.infer<typeof additionalSchema>;
-};
-
-type AllStepSchemas = typeof basicInfoSchema | typeof educationSchema | typeof familySchema | typeof religiousSchema | typeof preferencesSchema | typeof additionalSchema;
+type StepFormData =
+  | BasicProfileData
+  | AddressData
+  | EducationData
+  | FamilyInfoData
+  | PersonalReligiousData
+  | CareerIncomeData
+  | MarriagePreferencesData
+  | DeclarationsData;
 
 export default function BiodataWizard() {
-  const { t } = useLanguage();
   const [, navigate] = useLocation();
   const { addToast } = useToast();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [biodataId, setBiodataId] = useState<number | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [savedData, setSavedData] = useState<Partial<StepData>>({});
+
+  // Zustand store
+  const {
+    formData,
+    currentStep,
+    biodataId,
+    createdBiodataUrl,
+    isLoading,
+    setCurrentStep,
+    setBiodataId,
+    setCreatedBiodataUrl,
+    setIsLoading,
+    updateStepData,
+    loadExistingBiodata,
+  } = useBiodataWizardStore();
 
   const currentStepData = steps[currentStep];
   const progress = ((currentStep + 1) / steps.length) * 100;
 
-  // Initialize form for current step
-  const form = useForm<z.infer<AllStepSchemas>>({
-    resolver: zodResolver(currentStepData.schema as AllStepSchemas),
-    defaultValues: savedData[currentStepData.id as keyof StepData] || {},
+  // Initialize form for current step with store data
+  const form = useForm<StepFormData>({
+    resolver: zodResolver(currentStepData.schema as any),
+    defaultValues: {} as any,
   });
 
-  // Reset form when step changes or data is loaded
+  // Reset form when step changes or formData updates
   useEffect(() => {
-    const stepDefaultValues = savedData[currentStepData.id as keyof StepData] || {};
-    form.reset(stepDefaultValues);
-  }, [currentStep, savedData, currentStepData.id]);
+    const stepData = (formData as any)?.[currentStepData.id];
+    form.reset(stepData ?? {});
+  }, [currentStepData.id, formData, form]);
 
   // Load existing biodata if editing
   useEffect(() => {
     const loadExistingData = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const editId = urlParams.get('edit');
+      const editId = urlParams.get("edit");
 
-      if (editId) {
-        try {
-          const token = localStorage.getItem('auth_token');
-          const response = await fetch(api.biodata.get.path.replace(':id', editId), {
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-          });
+      if (!editId) return;
 
-          if (response.ok) {
-            const biodata = await response.json();
-            setBiodataId(biodata.id);
-            // Split biodata into steps
-            const stepData: Partial<StepData> = {
-              basic: {
-                fullName: biodata.fullName,
-                gender: biodata.gender,
-                dateOfBirth: biodata.dateOfBirth,
-                height: biodata.height,
-                weight: biodata.weight,
-                complexion: biodata.complexion,
-                bloodGroup: biodata.bloodGroup,
-              },
-              education: {
-                educationLevel: biodata.educationLevel,
-                educationDetails: biodata.educationDetails,
-                profession: biodata.profession,
-                occupation: biodata.occupation,
-                annualIncome: biodata.annualIncome,
-                workLocation: biodata.workLocation,
-              },
-              family: {
-                fatherName: biodata.fatherName,
-                fatherOccupation: biodata.fatherOccupation,
-                motherName: biodata.motherName,
-                motherOccupation: biodata.motherOccupation,
-                siblingsCount: biodata.siblingsCount,
-                siblingsDetails: biodata.siblingsDetails,
-              },
-              religious: {
-                religion: biodata.religion,
-                sect: biodata.sect,
-                religiousPractice: biodata.religiousPractice,
-                prayerFrequency: biodata.prayerFrequency,
-                fasting: biodata.fasting,
-                quranReading: biodata.quranReading,
-              },
-              preferences: {
-                maritalStatus: biodata.maritalStatus,
-                willingToRelocate: biodata.willingToRelocate,
-                preferredAgeMin: biodata.preferredAgeMin,
-                preferredAgeMax: biodata.preferredAgeMax,
-                preferredEducation: biodata.preferredEducation,
-                preferredProfession: biodata.preferredProfession,
-                preferredLocation: biodata.preferredLocation,
-                otherPreferences: biodata.otherPreferences,
-              },
-              additional: {
-                hobbies: biodata.hobbies,
-                languages: biodata.languages,
-                aboutMe: biodata.aboutMe,
-                expectations: biodata.expectations,
-              },
-            };
-            setSavedData(stepData);
-          }
-        } catch (error) {
-          console.error('Failed to load biodata:', error);
+      try {
+        const token = localStorage.getItem("auth_token");
+        const response = await fetch(
+          api.biodata.get.path.replace(":id", editId),
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          },
+        );
+
+        if (response.ok) {
+          const biodata = await response.json();
+          loadExistingBiodata(biodata);
         }
+      } catch (error) {
+        console.error("Failed to load biodata:", error);
       }
     };
 
     loadExistingData();
-  }, []);
+  }, [loadExistingBiodata]);
 
-  const saveStep = async (data: any) => {
-    setIsSubmitting(true);
+  // Map frontend 8-step data to backend schema
+  const mapToBackendSchema = (allData: any) => {
+    const basic = allData.basic_profile;
+    const address = allData.address;
+    const education = allData.education;
+    const family = allData.family;
+    const personal = allData.personal_religious;
+    const career = allData.career;
+    const marriage = allData.marriage;
+
+    // Map biodata_type to gender
+    const gender =
+      basic?.biodata_type === "groom"
+        ? "male"
+        : basic?.biodata_type === "bride"
+          ? "female"
+          : "male";
+
+    return {
+      // Basic Info (required by backend)
+      fullName: basic?.fullName || "",
+      gender: gender || "male",
+
+      // Basic Profile
+      dateOfBirth: null, // Could parse from birth_month_year
+      height: basic?.height,
+      weight: basic?.weight,
+      complexion: basic?.complexion,
+      bloodGroup: basic?.blood_group,
+
+      // Contact Info (from address step)
+      phone: null,
+      email: null,
+      address: address
+        ? `${address.permanent_address.area_name || ""}, ${address.permanent_address.district}, ${address.permanent_address.division}, ${address.permanent_address.country}`.replace(
+            /^, /,
+            "",
+          )
+        : undefined,
+      city: address?.permanent_address?.district,
+      state: address?.permanent_address?.division,
+      country: address?.permanent_address?.country,
+
+      // Education (from education step)
+      educationLevel: education?.education_medium,
+      educationDetails: education?.ssc_year
+        ? `SSC: ${education.ssc_year}, ${education.ssc_group}, ${education.ssc_result}` +
+          (education.hsc_year
+            ? ` | HSC: ${education.hsc_year}, ${education.hsc_group}, ${education.hsc_result}`
+            : "") +
+          (education.higher_education?.length
+            ? ` | Higher: ${education.higher_education.map((h: any) => `${h.level} in ${h.subject}`).join(", ")}`
+            : "")
+        : undefined,
+
+      // Career
+      profession: career?.occupation_title,
+      occupation: career?.occupation_details,
+      annualIncome: career?.monthly_income
+        ? (career.monthly_income * 12).toString()
+        : undefined,
+      workLocation: career?.workplace_city,
+
+      // Family Info
+      fatherName: family?.father?.occupation
+        ? `Father - ${family.father.occupation}`
+        : undefined,
+      fatherOccupation: family?.father?.occupation,
+      motherName: family?.mother?.occupation
+        ? `Mother - ${family.mother.occupation}`
+        : undefined,
+      motherOccupation: family?.mother?.occupation,
+      siblingsCount:
+        (family?.siblings?.brothers_count || 0) +
+        (family?.siblings?.sisters_count || 0),
+      siblingsDetails: family?.siblings?.details,
+
+      // Religious Info
+      religion: "islam",
+      sect: null,
+      religiousPractice:
+        personal?.five_times_prayer === "yes"
+          ? "regular"
+          : personal?.five_times_prayer === "trying"
+            ? "regular"
+            : "occasional",
+      prayerFrequency:
+        personal?.five_times_prayer === "yes"
+          ? "5_times"
+          : personal?.five_times_prayer === "trying"
+            ? "3_times"
+            : "occasional",
+      fasting: "ramadan_only",
+      quranReading: personal?.quran_tilawat ? "daily" : "occasional",
+
+      // Marriage Preferences
+      maritalStatus:
+        basic?.marital_status === "unmarried"
+          ? ("never_married" as const)
+          : basic?.marital_status === "married"
+            ? ("never_married" as const)
+            : basic?.marital_status === "divorced"
+              ? ("divorced" as const)
+              : basic?.marital_status === "widowed"
+                ? ("widowed" as const)
+                : ("never_married" as const),
+
+      willingToRelocate: !!marriage?.marriage_related?.after_marriage_location,
+      preferredAgeMin: marriage?.desired_spouse?.age_range
+        ? parseInt(marriage.desired_spouse.age_range.split("-")[0])
+        : undefined,
+      preferredAgeMax: marriage?.desired_spouse?.age_range
+        ? parseInt(marriage.desired_spouse.age_range.split("-")[1])
+        : undefined,
+      preferredEducation: marriage?.desired_spouse?.education,
+      preferredProfession: marriage?.desired_spouse?.occupation,
+      preferredLocation: marriage?.desired_spouse?.district_preference,
+      otherPreferences: marriage?.desired_spouse?.desired_qualities,
+
+      // Additional Info
+      hobbies: personal?.hobbies,
+      languages: null,
+      aboutMe: personal?.health_notes,
+      expectations: marriage?.marriage_related?.why_marriage_view,
+    };
+  };
+
+  const saveStepData = async (
+    allData: any,
+  ): Promise<string | number | undefined> => {
     try {
-      // Merge current step data with existing data
-      const updatedData = { ...savedData, [currentStepData.id]: data };
+      const payload = mapToBackendSchema(allData);
+      const token = localStorage.getItem("auth_token");
 
-      // Flatten all step data into a single object
-      const payload: any = {};
-      Object.values(updatedData).forEach(stepData => {
-        Object.assign(payload, stepData);
-      });
-
-      // Convert dateOfBirth to Date object if it's a valid date string
-      if (payload.dateOfBirth && typeof payload.dateOfBirth === 'string') {
-        const date = new Date(payload.dateOfBirth);
-        if (!isNaN(date.getTime())) {
-          // Send as ISO string without milliseconds and Z suffix for better database compatibility
-          payload.dateOfBirth = date.toISOString().split('.')[0] + 'Z';
-        } else {
-          delete payload.dateOfBirth; // Remove invalid dates
-        }
-      }
-
-      // If dateOfBirth is still empty/invalid, remove it
-      if (!payload.dateOfBirth || payload.dateOfBirth === '') {
-        delete payload.dateOfBirth;
-      }
-
-      // Convert siblingsCount to number if it's a valid string, otherwise remove the field
-      if (payload.siblingsCount !== undefined && payload.siblingsCount !== null && payload.siblingsCount !== '') {
-        const num = parseInt(String(payload.siblingsCount), 10);
-        if (!isNaN(num)) {
-          payload.siblingsCount = num;
-        } else {
-          delete payload.siblingsCount;
-        }
-      } else {
-        delete payload.siblingsCount;
-      }
-
-      // Convert numeric fields, remove if invalid
-      if (payload.preferredAgeMin !== undefined && payload.preferredAgeMin !== null && payload.preferredAgeMin !== '') {
-        const num = parseInt(String(payload.preferredAgeMin), 10);
-        if (!isNaN(num)) {
-          payload.preferredAgeMin = num;
-        } else {
-          delete payload.preferredAgeMin;
-        }
-      } else {
-        delete payload.preferredAgeMin;
-      }
-
-      if (payload.preferredAgeMax !== undefined && payload.preferredAgeMax !== null && payload.preferredAgeMax !== '') {
-        const num = parseInt(String(payload.preferredAgeMax), 10);
-        if (!isNaN(num)) {
-          payload.preferredAgeMax = num;
-        } else {
-          delete payload.preferredAgeMax;
-        }
-      } else {
-        delete payload.preferredAgeMax;
-      }
-
-      // Remove other undefined/null/empty fields that shouldn't be sent
-      Object.keys(payload).forEach(key => {
-        if (payload[key] === null || payload[key] === undefined || payload[key] === '') {
-          delete payload[key];
-        }
-      });
-
-      // Don't send fields that match database defaults
-      if (payload.religion === 'islam') {
-        delete payload.religion;
-      }
-      if (payload.maritalStatus === 'never_married') {
-        delete payload.maritalStatus;
-      }
-
-      // Ensure required fields have defaults
-      if (!payload.religion) {
-        payload.religion = 'islam';
-      }
-      if (!payload.maritalStatus) {
-        payload.maritalStatus = 'never_married';
-      }
-
-      console.log('Sending payload:', payload);
-
-      let response;
-      const token = localStorage.getItem('auth_token');
-
-      if (biodataId) {
-        // Update existing biodata
-        response = await fetch(api.biodata.update.path.replace(':id', biodataId.toString()), {
-          method: "PATCH",
+      const response = await fetch(
+        biodataId
+          ? api.biodata.update.path.replace(":id", String(biodataId))
+          : api.biodata.create.path,
+        {
+          method: biodataId ? "PATCH" : "POST",
           headers: {
             "Content-Type": "application/json",
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify(payload),
-        });
-      } else {
-        // Create new biodata
-        response = await fetch(api.biodata.create.path, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify(payload),
-        });
-      }
+        },
+      );
 
       if (!response.ok) throw new Error("Failed to save biodata");
 
       const savedBiodata = await response.json();
       setBiodataId(savedBiodata.id);
-      setSavedData(updatedData);
+
+      // Toast only for first save or last step save
+      if (!biodataId || currentStep === steps.length - 1) {
+        addToast({
+          type: "success",
+          title: "Progress saved!",
+          description:
+            "Your biodata is saved as draft. You can continue anytime.",
+          duration: 3000,
+        });
+      }
+
+      return savedBiodata.id;
+    } catch (error) {
+      console.error("Save step error:", error);
+
+      // Only show error toast on final step
+      if (currentStep === steps.length - 1) {
+        addToast({
+          type: "error",
+          title: "Failed to save biodata",
+          description:
+            error instanceof Error ? error.message : "Please try again",
+          duration: 5000,
+        });
+      }
+
+      return undefined;
+    }
+  };
+
+  const markBiodataComplete = async (
+    allData: any,
+    idToUse?: string | number,
+  ) => {
+    const id = idToUse ?? biodataId;
+    if (!id) {
+      addToast({
+        type: "error",
+        title: "Could not complete biodata",
+        description: "Missing biodata id. Please try again.",
+        duration: 5000,
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const payload = mapToBackendSchema(allData);
+      const token = localStorage.getItem("auth_token");
+
+      const response = await fetch(
+        api.biodata.update.path.replace(":id", String(id)),
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      if (!response.ok) throw new Error("Failed to complete biodata");
+
+      const savedBiodata = await response.json();
+
+      // Generate share URL for published biodata
+      if (savedBiodata.status === "published") {
+        const shareUrl = `${window.location.origin}/b/${savedBiodata.token}`;
+        setCreatedBiodataUrl(shareUrl);
+      }
 
       addToast({
         type: "success",
-        title: "Step saved successfully!",
-        duration: 3000,
+        title: "Biodata completed successfully!",
+        description:
+          savedBiodata.status === "published"
+            ? "Your biodata is now live and shareable."
+            : "Your biodata has been saved.",
+        duration: 4000,
       });
-
-      return savedBiodata;
     } catch (error) {
       addToast({
         type: "error",
-        title: "Failed to save step",
+        title: "Failed to complete biodata",
+        description:
+          error instanceof Error ? error.message : "Please try again",
         duration: 5000,
       });
-      throw error;
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   const handleNext = async () => {
     const isValid = await form.trigger();
-    if (!isValid) {
-      console.log("Form validation failed:", form.formState.errors);
-      return;
-    }
+    if (!isValid) return;
 
     const data = form.getValues();
-    try {
-      await saveStep(data);
 
-      if (currentStep < steps.length - 1) {
-        setCurrentStep(currentStep + 1);
-      } else {
-        // Final step completed
-        addToast({
-          type: "success",
-          title: "Biodata completed!",
-          duration: 3000,
-        });
-        navigate("/biodata");
-      }
-    } catch (error) {
-      console.error("Error saving step:", error);
+    // Update step data in store
+    updateStepData(currentStepData.id, data);
+
+    // Snapshot including this step's latest data
+    const updatedFormData = {
+      ...(formData as any),
+      [currentStepData.id]: data,
+    };
+
+    // Save as draft on every step
+    const savedId = await saveStepData(updatedFormData);
+
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      // Final step: complete/publish
+      await markBiodataComplete(updatedFormData, savedId);
     }
   };
 
   const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep > 0) setCurrentStep(currentStep - 1);
   };
 
-  const handleSaveAndExit = async () => {
-    const data = form.getValues();
-    await saveStep(data);
-    navigate("/biodata");
-  };
+  // Show success screen if biodata was created and we have a share URL
+  if (createdBiodataUrl) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white/80 backdrop-blur-sm shadow-xl border border-border/50 rounded-xl p-8 text-center">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="w-10 h-10 text-primary" />
+              </div>
+
+              <h3 className="text-3xl font-bold mb-4 text-primary font-serif">
+                Biodata Created Successfully!
+              </h3>
+              <p className="text-muted-foreground mb-6 text-lg">
+                Your marriage biodata has been created and is ready to share
+                with potential matches.
+              </p>
+
+              <div className="bg-primary/5 p-6 rounded-xl mb-6 border border-primary/20">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <Share2 className="w-6 h-6 text-primary" />
+                  <span className="font-medium text-lg text-primary font-serif">
+                    Share Your Biodata
+                  </span>
+                </div>
+
+                <div className="flex gap-3">
+                  <input
+                    value={createdBiodataUrl}
+                    readOnly
+                    className="flex-1 font-mono text-base bg-white/50 border border-border/50 rounded-md px-3 py-2"
+                  />
+                  <Button
+                    onClick={() => {
+                      navigator.clipboard.writeText(createdBiodataUrl);
+                      addToast({
+                        type: "success",
+                        title: "Copied!",
+                        description: "Link copied to clipboard",
+                        duration: 2000,
+                      });
+                    }}
+                    className="rounded-full px-6 shadow-lg shadow-primary/20"
+                    size="lg"
+                  >
+                    <Copy className="w-5 h-5 mr-2" />
+                    Copy
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex gap-4 justify-center">
+                <Button
+                  onClick={() => navigate("/biodata")}
+                  variant="outline"
+                  className="rounded-full px-6 py-3"
+                >
+                  View All Biodata
+                </Button>
+                <Button
+                  onClick={() => navigate("/")}
+                  className="rounded-full px-6 py-3 shadow-lg shadow-primary/20"
+                >
+                  Find Matches
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const renderStepContent = () => {
     switch (currentStepData.id) {
-      case "basic":
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="fullName">Full Name *</Label>
-                <Input
-                  id="fullName"
-                  {...form.register("fullName")}
-                  placeholder="Enter your full name"
-                />
-                {(form.formState.errors as any).fullName && (
-                  <p className="text-sm text-red-500">{(form.formState.errors as any).fullName.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="gender">Gender *</Label>
-                <Select onValueChange={(value) => form.setValue("gender", value as "male" | "female")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
-                {(form.formState.errors as any).gender && (
-                  <p className="text-sm text-red-500">{(form.formState.errors as any).gender.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                <Input
-                  id="dateOfBirth"
-                  type="date"
-                  {...form.register("dateOfBirth")}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="height">Height</Label>
-                <Input
-                  id="height"
-                  {...form.register("height")}
-                  placeholder="e.g., 5'6"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="weight">Weight</Label>
-                <Input
-                  id="weight"
-                  {...form.register("weight")}
-                  placeholder="e.g., 70 kg"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="complexion">Complexion</Label>
-                <Select onValueChange={(value) => form.setValue("complexion", value as "fair" | "wheatish" | "dark")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select complexion" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="fair">Fair</SelectItem>
-                    <SelectItem value="wheatish">Wheatish</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        );
-
+      case "basic_profile":
+        return <BasicProfileStep form={form as any} />;
+      case "address":
+        return <AddressStep form={form as any} />;
       case "education":
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="educationLevel">Education Level</Label>
-                <Select onValueChange={(value) => form.setValue("educationLevel", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select education level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ssc">SSC</SelectItem>
-                    <SelectItem value="hsc">HSC</SelectItem>
-                    <SelectItem value="bachelors">Bachelor's Degree</SelectItem>
-                    <SelectItem value="masters">Master's Degree</SelectItem>
-                    <SelectItem value="phd">PhD</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="profession">Profession</Label>
-                <Input
-                  id="profession"
-                  {...form.register("profession")}
-                  placeholder="e.g., Software Engineer"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="annualIncome">Annual Income</Label>
-                <Input
-                  id="annualIncome"
-                  {...form.register("annualIncome")}
-                  placeholder="e.g., 5-10 Lakhs"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="workLocation">Work Location</Label>
-                <Input
-                  id="workLocation"
-                  {...form.register("workLocation")}
-                  placeholder="City, Country"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="educationDetails">Education Details</Label>
-              <Textarea
-                id="educationDetails"
-                {...form.register("educationDetails")}
-                placeholder="Describe your educational background in detail"
-                rows={3}
-              />
-            </div>
-          </div>
-        );
-
+        return <EducationStep form={form as any} />;
       case "family":
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="fatherName">Father's Name</Label>
-                <Input
-                  id="fatherName"
-                  {...form.register("fatherName")}
-                  placeholder="Father's full name"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="fatherOccupation">Father's Occupation</Label>
-                <Input
-                  id="fatherOccupation"
-                  {...form.register("fatherOccupation")}
-                  placeholder="Father's profession"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="motherName">Mother's Name</Label>
-                <Input
-                  id="motherName"
-                  {...form.register("motherName")}
-                  placeholder="Mother's full name"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="motherOccupation">Mother's Occupation</Label>
-                <Input
-                  id="motherOccupation"
-                  {...form.register("motherOccupation")}
-                  placeholder="Mother's profession"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="siblingsCount">Number of Siblings</Label>
-                <Input
-                  id="siblingsCount"
-                  type="number"
-                  {...form.register("siblingsCount", { valueAsNumber: true })}
-                  placeholder="0"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="siblingsDetails">Siblings Details</Label>
-              <Textarea
-                id="siblingsDetails"
-                {...form.register("siblingsDetails")}
-                placeholder="Details about your brothers and sisters"
-                rows={2}
-              />
-            </div>
-          </div>
-        );
-
-      case "religious":
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="sect">Sect</Label>
-                <Select onValueChange={(value) => form.setValue("sect", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select sect" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sunni">Sunni</SelectItem>
-                    <SelectItem value="shia">Shia</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="religiousPractice">Religious Practice</Label>
-                <Select onValueChange={(value) => form.setValue("religiousPractice", value as "regular" | "occasional" | "minimal")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select practice level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="regular">Regular</SelectItem>
-                    <SelectItem value="occasional">Occasional</SelectItem>
-                    <SelectItem value="minimal">Minimal</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="prayerFrequency">Prayer Frequency</Label>
-                <Select onValueChange={(value) => form.setValue("prayerFrequency", value as "5_times" | "3_times" | "occasional")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="How often do you pray?" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5_times">5 times daily</SelectItem>
-                    <SelectItem value="3_times">3 times daily</SelectItem>
-                    <SelectItem value="occasional">Occasionally</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="fasting">Fasting</Label>
-                <Select onValueChange={(value) => form.setValue("fasting", value as "ramadan_only" | "regular" | "occasional")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Fasting habits" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ramadan_only">Ramadan only</SelectItem>
-                    <SelectItem value="regular">Regular fasting</SelectItem>
-                    <SelectItem value="occasional">Occasionally</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        );
-
-      case "preferences":
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="maritalStatus">Marital Status</Label>
-                <Select onValueChange={(value) => form.setValue("maritalStatus", value as "never_married" | "divorced" | "widowed")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select marital status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="never_married">Never Married</SelectItem>
-                    <SelectItem value="divorced">Divorced</SelectItem>
-                    <SelectItem value="widowed">Widowed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="willingToRelocate"
-                  {...form.register("willingToRelocate")}
-                />
-                <Label htmlFor="willingToRelocate">Willing to relocate</Label>
-              </div>
-
-              <div>
-                <Label htmlFor="preferredAgeMin">Preferred Age (Min)</Label>
-                <Input
-                  id="preferredAgeMin"
-                  type="number"
-                  {...form.register("preferredAgeMin", { valueAsNumber: true })}
-                  placeholder="18"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="preferredAgeMax">Preferred Age (Max)</Label>
-                <Input
-                  id="preferredAgeMax"
-                  type="number"
-                  {...form.register("preferredAgeMax", { valueAsNumber: true })}
-                  placeholder="35"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="preferredEducation">Preferred Education</Label>
-                <Input
-                  id="preferredEducation"
-                  {...form.register("preferredEducation")}
-                  placeholder="e.g., Bachelor's degree or higher"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="preferredProfession">Preferred Profession</Label>
-                <Input
-                  id="preferredProfession"
-                  {...form.register("preferredProfession")}
-                  placeholder="e.g., Doctor, Engineer"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="preferredLocation">Preferred Location</Label>
-              <Input
-                id="preferredLocation"
-                {...form.register("preferredLocation")}
-                placeholder="Cities or countries you prefer"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="otherPreferences">Other Preferences</Label>
-              <Textarea
-                id="otherPreferences"
-                {...form.register("otherPreferences")}
-                placeholder="Any other preferences or requirements"
-                rows={3}
-              />
-            </div>
-          </div>
-        );
-
-      case "additional":
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="hobbies">Hobbies & Interests</Label>
-              <Input
-                id="hobbies"
-                {...form.register("hobbies")}
-                placeholder="e.g., Reading, cooking, sports"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="languages">Languages Known</Label>
-              <Input
-                id="languages"
-                {...form.register("languages")}
-                placeholder="e.g., English, Bengali, Arabic"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="aboutMe">About Me</Label>
-              <Textarea
-                id="aboutMe"
-                {...form.register("aboutMe")}
-                placeholder="Tell us about yourself, your personality, values, etc."
-                rows={4}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="expectations">Expectations from Marriage</Label>
-              <Textarea
-                id="expectations"
-                {...form.register("expectations")}
-                placeholder="What are your expectations from marriage and married life?"
-                rows={4}
-              />
-            </div>
-          </div>
-        );
-
+        return <FamilyInfoStep form={form as any} />;
+      case "personal_religious":
+        return <PersonalReligiousStep form={form as any} />;
+      case "career":
+        return <CareerIncomeStep form={form as any} />;
+      case "marriage":
+        return <MarriagePreferencesStep form={form as any} />;
+      case "declaration":
+        return <DeclarationsStep form={form as any} />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Create Marriage Biodata</h1>
-        <p className="text-muted-foreground">
-          Step {currentStep + 1} of {steps.length}: {currentStepData.title}
-        </p>
-        <Progress value={progress} className="mt-4" />
-      </div>
+    <div className="min-h-screen bg-background">
+      <Navbar />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{currentStepData.title}</CardTitle>
-          <CardDescription>
-            Fill in the information for this step. You can save and continue later.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(handleNext)} className="space-y-6">
-            {renderStepContent()}
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold font-serif text-primary mb-2">
+              Create Marriage Biodata
+            </h1>
+            <p className="text-muted-foreground">
+              Step {currentStep + 1} of {steps.length}: {currentStepData.title}
+            </p>
+          </div>
 
-            <div className="flex justify-between pt-6">
-              <div className="flex gap-2">
+          {/* Step Content */}
+          <div className="mb-8">{renderStepContent()}</div>
+
+          {/* Bottom Navigation Bar */}
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-lg border-t z-10">
+            <div className="container max-w-4xl mx-auto">
+              <div className="flex justify-between items-center">
                 <Button
-                  type="button"
-                  variant="outline"
                   onClick={handlePrevious}
                   disabled={currentStep === 0}
+                  variant="outline"
+                  className="gap-2"
                 >
+                  <ChevronLeft className="w-4 h-4" />
                   Previous
                 </Button>
+
+                <div className="flex-1 max-w-md mx-4">
+                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                    <span>{Math.round(progress)}% Complete</span>
+                    <span>
+                      Step {currentStep + 1} of {steps.length}
+                    </span>
+                  </div>
+                  <Progress
+                    value={progress}
+                    className="h-2 [&>[role=progressbar]]:bg-gray-300 dark:[&>[role=progressbar]]:bg-gray-600"
+                  />
+                </div>
+
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleSaveAndExit}
-                  disabled={isSubmitting}
+                  onClick={handleNext}
+                  disabled={isLoading}
+                  className="gap-2"
                 >
-                  {isSubmitting ? "Saving..." : "Save & Exit"}
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-900 mr-2"></div>
+                      Saving...
+                    </>
+                  ) : currentStep === steps.length - 1 ? (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Complete
+                    </>
+                  ) : (
+                    <>
+                      Next
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
                 </Button>
               </div>
-
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-              >
-                {isSubmitting
-                  ? "Saving..."
-                  : currentStep === steps.length - 1
-                    ? "Complete Biodata"
-                    : "Save & Next"
-                }
-              </Button>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+
+          {/* Spacer so content isn't hidden behind fixed bar */}
+          <div className="h-24" />
+        </div>
+      </div>
     </div>
   );
 }
