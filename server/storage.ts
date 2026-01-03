@@ -288,7 +288,7 @@ export class DatabaseStorage implements IStorage {
       console.log('Data received:', JSON.stringify(data, null, 2));
 
       const token = randomBytes(16).toString('hex');
-      const insertData = {
+      const insertData: any = {
         ...data,
         userId,
         token,

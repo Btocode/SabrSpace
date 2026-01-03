@@ -296,7 +296,9 @@ export const createBiodataSchema = insertBiodataSchema.omit({
   publishedAt: true, 
   reviewedAt: true,
   reviewedBy: true,
-  reviewNotes: true
+  reviewNotes: true,
+  profilePhoto: true,
+  additionalPhotos: true
 });
 export type CreateBiodataRequest = z.infer<typeof createBiodataSchema>;
 
