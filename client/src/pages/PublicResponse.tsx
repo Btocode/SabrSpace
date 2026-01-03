@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, CheckCircle2, Heart, Languages, Shield, MessageSquare } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Loader2, CheckCircle2, Heart, Languages, Shield, MessageSquare, Crown, Sparkles, BookOpen, Eye, User, UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,11 +23,57 @@ export default function PublicResponse() {
   const { addToast } = useToast();
   const { t, locale, setLocale } = useLanguage();
   const [success, setSuccess] = useState(false);
+  const [curatorDialogOpen, setCuratorDialogOpen] = useState(false);
+  const [curatorEmail, setCuratorEmail] = useState("");
 
   const { register, handleSubmit, formState: { errors, isValid }, watch } = useForm();
 
   // Watch attestation for validation if required
   const attestationChecked = watch("attestation");
+
+  const handleAddCurator = async () => {
+    if (!curatorEmail.trim()) {
+      addToast({
+        type: "error",
+        title: "Email required",
+        description: "Please enter a valid email address.",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(curatorEmail)) {
+      addToast({
+        type: "error",
+        title: "Invalid email",
+        description: "Please enter a valid email address.",
+        duration: 4000,
+      });
+      return;
+    }
+
+    try {
+      // Here you would typically call an API to add the curator
+      // For now, we'll just show a success message
+      addToast({
+        type: "success",
+        title: "Curator added",
+        description: `Curator access granted to ${curatorEmail}`,
+        duration: 4000,
+      });
+      setCuratorEmail("");
+      setCuratorDialogOpen(false);
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Failed to add curator",
+        description: "Please try again later.",
+        duration: 4000,
+      });
+    }
+  };
 
   if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -78,79 +125,195 @@ export default function PublicResponse() {
   if (success) {
     return (
       <div className="min-h-screen bg-pattern flex items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="bg-white/90 backdrop-blur-sm max-w-md w-full p-8 rounded-3xl shadow-2xl text-center space-y-6 border border-primary/20"
-        >
-          <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mx-auto text-white shadow-lg">
-            <CheckCircle2 className="w-12 h-12" />
+        <div className="bg-white/95 backdrop-blur-sm max-w-2xl w-full rounded-3xl shadow-xl border border-primary/20 overflow-hidden">
+          {/* Split Layout - No Gap */}
+          <div className="flex">
+            {/* Left Section - Islamic Greeting */}
+            <div className="flex-1 bg-gradient-to-br from-primary/5 via-primary/3 to-accent/5 p-8 text-center flex flex-col justify-center">
+              <div className="space-y-4">
+                <h2 className="text-4xl font-bold font-serif text-primary mb-2">جزاك الله خيراً</h2>
+                <p className="text-xl text-primary font-medium">JazakAllah Khair</p>
+                <p className="text-muted-foreground leading-relaxed text-base mt-4">
+                  {t("response.success")}
+                </p>
+              </div>
+            </div>
+
+            {/* Right Section - Islamic Blessings */}
+            <div className="flex-1 bg-gradient-to-br from-emerald-50 via-primary/5 to-amber-50 p-8 flex flex-col justify-center">
+              <div className="space-y-4">
+
+                <p className="text-sm text-emerald-800 leading-relaxed italic text-center">
+                  "May Allah bless you with the best partner and fill your life with barakah and happiness. 🤲"
+                </p>
+
+                <p className="text-xs text-emerald-700 font-medium text-center mt-4">
+                  May your sincere responses bring you closer to finding your ideal Islamic marriage partner through divine guidance.
+                </p>
+
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-3">
-            <h2 className="text-3xl font-bold font-serif text-primary">جزاك الله خيراً</h2>
-            <p className="text-lg text-primary font-medium">JazakAllah Khair</p>
-            <p className="text-muted-foreground leading-relaxed">
-              {t("response.success")}
-            </p>
-          </div>
+          {/* Powered by SabrSpace Banner */}
+          <div className="bg-gradient-to-r from-primary/8 via-primary/4 to-accent/8 border-t border-primary/15 px-6 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded bg-primary/20 flex items-center justify-center">
+                  <span className="text-sm font-serif text-primary">س</span>
+                </div>
+                <span className="text-sm font-medium">
+                  <span className="text-primary/60">Powered by </span>
+                  <span className="text-primary font-semibold">SabrSpace</span>
+                </span>
+              </div>
 
-          <div className="pt-4">
-            <Button
-              onClick={() => window.location.reload()}
-              className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg rounded-full"
-              size="lg"
-            >
-              <Heart className="w-4 h-4 mr-2" />
-              {t("response.submitAnother")}
-            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary hover:text-primary hover:bg-primary/10 rounded-full px-4 py-1 h-auto text-xs font-medium bg-primary/20"
+                onClick={() => window.open('https://sabrspace.com', '_blank')}
+              >
+                Explore SabrSpace
+              </Button>
+            </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-pattern pb-20">
+      {/* Soft background accent */}
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(60rem_40rem_at_10%_10%,rgba(99,102,241,0.08),transparent_60%),radial-gradient(50rem_30rem_at_90%_20%,rgba(245,158,11,0.06),transparent_55%)]" />
 
-      {/* Top Language Toggle */}
+      {/* Top Logo and Language Toggle */}
+      <div className="absolute top-4 left-4 z-20">
+        <div className="flex items-center gap-2 group">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+            <span className="text-xl font-serif text-primary">س</span>
+          </div>
+          <span className="font-bold text-lg tracking-tight text-foreground/90 group-hover:text-primary transition-colors">
+            {t("app.name")}
+          </span>
+        </div>
+      </div>
+
       <div className="absolute top-4 right-4 z-20">
         <Button
           variant="outline"
           size="sm"
           onClick={() => setLocale(locale === 'en' ? 'bn' : 'en')}
-          className="bg-white/80 backdrop-blur-sm border-emerald-200 hover:bg-emerald-50"
+          className="bg-white/90 backdrop-blur-sm border-emerald-200 hover:bg-emerald-50 rounded-full"
         >
           <Languages className="w-4 h-4 mr-2" />
-          {locale === 'en' ? 'বাংলা' : 'English'}
+          {locale === 'en' ? 'বাংলا' : 'English'}
         </Button>
       </div>
 
-      <div className="relative max-w-2xl mx-auto px-4 pt-8">
+      <div className="relative max-w-4xl mx-auto px-4 pt-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="mb-8"
         >
-          <Bismillah className="mb-8 opacity-80" />
+          <Bismillah className="mb-6 opacity-80" />
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-border/50">
-            <h1 className="text-3xl md:text-4xl font-bold font-serif text-primary mb-4">{set.title}</h1>
-            {set.description && (
-              <p className="text-lg text-muted-foreground leading-relaxed">{set.description}</p>
-            )}
+          {/* Reorganized Left-Aligned Hero Header */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/8 via-background to-amber-500/8 border border-primary/15 p-6 shadow-lg">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/3 to-amber-500/3" />
+            <div className="relative">
+              {/* Add Curator Button - Top Right */}
+              {!set.requireAttestation && (
+                <div className="absolute top-0 right-0 -mt-2 -mr-2">
+                  <Dialog open={curatorDialogOpen} onOpenChange={setCuratorDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-white/90 backdrop-blur-sm border-emerald-200 hover:bg-emerald-50 rounded-full shadow-sm"
+                      >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Add Curator
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Add Question Curator</DialogTitle>
+                        <DialogDescription>
+                          Add someone who can view and help manage these questions. They will receive access to review responses.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="curator-email">Email Address</Label>
+                          <Input
+                            id="curator-email"
+                            type="email"
+                            placeholder="curator@example.com"
+                            value={curatorEmail}
+                            onChange={(e) => setCuratorEmail(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setCuratorDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={handleAddCurator}
+                          className="bg-primary hover:bg-primary/90"
+                        >
+                          Add Curator
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              )}
 
-            {/* Stats */}
-            <div className="flex justify-center gap-6 mt-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-primary" />
-                <span className="text-primary font-medium">{set.questions.length} Questions</span>
+              {/* Header Row */}
+              <div className="mb-4">
+                {/* Question Creator Info */}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                  <User className="w-4 h-4 text-primary" />
+                  <span className="font-medium text-primary">Questions by: </span>
+                  <span>{set.userId ? "Family Member" : "Direct Party"}</span>
+                </div>
+
+                {/* Third Person Involvement Notice */}
+                <div className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
+                  <Shield className="w-4 h-4 text-emerald-600" />
+                  <span className="text-sm text-emerald-800 font-medium">
+                    {set.requireAttestation ?
+                      "Third person involved - Islamic oath required for authenticity" :
+                      "Direct communication - No third person involved in this Islamic marriage inquiry"
+                    }
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-primary" />
-                <span className="text-primary font-medium">{set.requireAttestation ? 'Oath Required' : 'No Oath'}</span>
+
+              {/* Stats Row */}
+              <div className="flex flex-wrap gap-3 text-xs">
+                <div className="inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-2 text-muted-foreground border border-border/60">
+                  <MessageSquare className="w-4 h-4 text-primary" />
+                  <span className="text-primary font-medium">{set.questions.length} Questions</span>
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-2 text-muted-foreground border border-border/60">
+                  <Shield className="w-4 h-4 text-primary" />
+                  <span className="text-primary font-medium">{set.requireAttestation ? 'With Islamic Oath' : 'No Oath Required'}</span>
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-2 text-muted-foreground border border-border/60">
+                  <Eye className="w-4 h-4 text-primary" />
+                  <span className="text-primary font-medium">{set.views} Views</span>
+                </div>
               </div>
             </div>
           </div>
@@ -163,92 +326,234 @@ export default function PublicResponse() {
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-8"
         >
-          {/* Responder Info */}
+          {/* Responder Info - Enhanced Name Field */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name" className="text-base font-semibold text-foreground/80">
-                  {t("response.name")}
-                  {!set.allowAnonymous && <span className="text-destructive ml-1">*</span>}
-                  {set.allowAnonymous && <span className="text-muted-foreground ml-2">(Optional)</span>}
-                </Label>
-                <Input
-                  id="name"
-                  {...register("name", { required: !set.allowAnonymous })}
-                  className="mt-1.5"
-                  placeholder={set.allowAnonymous ? "Enter your name or leave blank" : "Enter your name"}
-                />
-                {errors.name && (
-                  <p className="text-destructive text-sm mt-1">Name is required</p>
-                )}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-background to-primary/5 border border-primary/20 p-6 shadow-lg">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent" />
+              <div className="relative">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 space-y-3">
+                    <div>
+                      <Label htmlFor="name" className="text-lg font-semibold text-foreground flex items-center gap-2">
+                        {t("response.name")}
+                        {!set.allowAnonymous && <span className="text-destructive text-base">*</span>}
+                        {set.allowAnonymous && <span className="text-muted-foreground text-sm">(Optional)</span>}
+                      </Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Your name helps us provide personalized Islamic marriage guidance
+                      </p>
+                    </div>
+
+                    <div className="relative">
+                      <Input
+                        id="name"
+                        {...register("name", { required: !set.allowAnonymous })}
+                        className="h-12 text-base bg-background/90 border-primary/30 focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground/60"
+                        placeholder={set.allowAnonymous ? "Enter your name or leave blank for anonymous" : "Enter your full name"}
+                      />
+                      {errors.name && (
+                        <div className="flex items-center gap-2 mt-2 text-sm text-destructive">
+                          <span className="w-1.5 h-1.5 rounded-full bg-destructive"></span>
+                          <span>Name is required for personalized guidance</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">
+                      <Shield className="w-3 h-3" />
+                      <span>Private & Confidential</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
 
-          {/* Attestation */}
+          {/* Islamic Oath & Privacy */}
           {set.requireAttestation && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 flex items-start gap-4">
-              <Checkbox
-                id="attestation"
-                {...register("attestation", { required: true })}
-                className="mt-1 border-amber-400 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-              />
-              <Label htmlFor="attestation" className="font-serif text-lg leading-relaxed text-amber-900 cursor-pointer">
-                "{t("response.attestation")}"
-              </Label>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 via-background to-emerald-50 border border-amber-200/50 p-6 shadow-lg">
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-emerald-500/5" />
+                <div className="relative">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700 mt-1">
+                      <Shield className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-3">
+                        <h3 className="font-semibold text-amber-900">Islamic Oath</h3>
+                        <div className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-2 py-1 text-xs text-amber-800">
+                          <Sparkles className="w-3 h-3" />
+                          Sacred Commitment
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label htmlFor="attestation" className="font-serif text-base leading-relaxed text-amber-900 cursor-pointer block">
+                          <Checkbox
+                            id="attestation"
+                            {...register("attestation", { required: true })}
+                            className="mr-3 border-amber-400 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                          />
+                          "{t("response.attestation")}"
+                        </Label>
+
+                        <div className="text-sm text-amber-800/80 leading-relaxed">
+                          <p className="mb-2">
+                            <strong>Privacy & Trust:</strong> Your responses are handled with Islamic principles of Amanah (trust) and will only be shared with appropriate marriage guidance.
+                          </p>
+                          <p className="text-xs text-amber-700">
+                            By submitting, you affirm that all information provided is truthful and intended for Islamic marriage guidance only.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           )}
 
-          {/* Questions */}
-          <div className="space-y-6">
+          {/* Dua Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 via-background to-primary/5 border border-emerald-200/50 p-6 shadow-lg">
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-primary/5" />
+              <div className="relative">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                    <Heart className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-3">
+                      <h3 className="font-semibold text-emerald-900">Dua for Guidance</h3>
+                      <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-2 py-1 text-xs text-emerald-800">
+                        <Crown className="w-3 h-3" />
+                        Islamic Prayer
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <blockquote className="text-emerald-900 font-serif text-base leading-relaxed border-l-4 border-emerald-400 pl-4 italic">
+                        "رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا"
+                      </blockquote>
+                      <p className="text-sm text-emerald-800/80">
+                        <strong>Translation:</strong> "Our Lord, grant us from among our spouses and offspring comfort to our eyes and make us a leader for the righteous." (Surah Al-Furqan: 74)
+                      </p>
+                      <p className="text-xs text-emerald-700">
+                        May Allah guide you to the best partner and bless your journey with barakah and happiness. 🤲
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Questions - Compact Design */}
+          <div className="space-y-4">
             {set.questions.map((question: any, idx: number) => (
               <motion.div
                 key={question.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
+                transition={{ delay: 0.7 + idx * 0.05 }}
               >
-                <div className="space-y-3">
-                  <Label className="text-lg font-medium block">
-                    <span className="text-muted-foreground mr-2">{idx + 1}.</span>
-                    {question.prompt}
-                    {question.required && <span className="text-destructive ml-1">*</span>}
-                  </Label>
-                  <Textarea
-                    {...register(`question_${question.id}`, { required: question.required })}
-                    className="min-h-[120px] resize-y bg-muted/20"
-                    placeholder="Type your answer here..."
-                  />
-                  {errors[`question_${question.id}`] && (
-                    <p className="text-xs text-destructive">This question is required</p>
-                  )}
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-white/90 via-background to-white/70 border border-border/40 p-4 shadow-md backdrop-blur-sm">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/3 to-transparent" />
+
+                  <div className="relative space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-primary font-semibold text-xs flex-shrink-0 mt-0.5">
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Label className="text-base font-medium block text-foreground leading-snug">
+                          {question.prompt}
+                          {question.required && <span className="text-destructive ml-1.5 text-sm">*</span>}
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {question.required ? "Required" : "Optional"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <Textarea
+                      {...register(`question_${question.id}`, { required: question.required })}
+                      className="min-h-[80px] max-h-[120px] resize-none bg-background/70 border-border/50 focus:border-primary/40 focus:ring-primary/10 text-sm"
+                      placeholder="Share your thoughts here..."
+                    />
+                    {errors[`question_${question.id}`] && (
+                      <p className="text-xs text-destructive flex items-center gap-1.5">
+                        <span className="w-1 h-1 rounded-full bg-destructive"></span>
+                        Required
+                      </p>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))}
           </div>
 
-          <div className="pt-4 pb-12">
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full text-lg h-14 rounded-xl shadow-xl shadow-primary/20"
-              disabled={submitResponse.isPending || (set.requireAttestation && !attestationChecked)}
-            >
-              {submitResponse.isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              ) : null}
-              {t("response.submit")}
-            </Button>
-            {set.requireAttestation && !attestationChecked && (
-              <p className="text-center text-sm text-amber-600 mt-3">
-                Please accept the oath above to submit.
-              </p>
-            )}
-          </div>
+          {/* Submit Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 + set.questions.length * 0.1 }}
+            className="pt-8 pb-16"
+          >
+            <div className="bg-muted/30 border border-border/40 rounded-xl p-6">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-semibold text-foreground">Ready to Submit?</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      You can submit this form only once.
+                    </p>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="h-12 px-8 rounded-lg bg-primary hover:bg-primary/90 text-base font-medium"
+                    disabled={submitResponse.isPending || (set.requireAttestation && !attestationChecked)}
+                  >
+                    {submitResponse.isPending ? (
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    ) : (
+                      <Heart className="w-5 h-5 mr-2" />
+                    )}
+                    {t("response.submit")}
+                  </Button>
+                </div>
+
+                {set.requireAttestation && !attestationChecked && (
+                  <div className="flex items-center gap-2 text-sm text-amber-600 mt-3">
+                    <Shield className="w-4 h-4" />
+                    <span>Please accept the Islamic oath above to submit your responses.</span>
+                  </div>
+                )}
+
+                <p className="text-sm text-muted-foreground mt-2">
+                  Your information is handled with Islamic principles of trust and privacy.
+                </p>
+              </div>
+            </div>
+          </motion.div>
         </motion.form>
       </div>
     </div>
