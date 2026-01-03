@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/lib/i18n";
-import { Loader2, User, Users, LogIn, UserPlus, Mail } from "lucide-react";
+import { Loader2, User, Users, LogIn, UserPlus, Mail, Heart, FileText, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -123,72 +123,91 @@ export default function Login() {
           >
             <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-border/50">
               <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <UserPlus className="w-8 h-8 text-amber-600" />
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm mb-4 border border-primary/20">
+                  <Heart className="w-4 h-4 fill-primary text-primary" />
+                  <span>Ready for More?</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-amber-800">
-                  Welcome Back!
+                <CardTitle className="text-2xl font-bold text-foreground font-serif">
+                  Unlock Your Marriage Journey
                 </CardTitle>
-                <CardDescription className="text-amber-700">
-                  You're currently using a temporary account. Choose how you'd like to proceed.
+                <CardDescription className="text-muted-foreground text-base">
+                  You're exploring with a temporary account. Create your permanent profile to find meaningful Islamic connections.
                 </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Upgrade to Permanent Account */}
-                  <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-200 hover:shadow-md transition-shadow">
+                  <div className="p-6 bg-gradient-to-br from-primary/5 via-background to-amber-500/5 rounded-xl border border-primary/20 hover:shadow-md transition-shadow">
                     <div className="text-center space-y-4">
-                      <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
-                        <UserPlus className="w-6 h-6 text-amber-600" />
+                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                        <Heart className="w-6 h-6 text-primary" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-amber-800 mb-2">Create Permanent Account</h3>
-                        <p className="text-sm text-amber-700 mb-4">
-                          Upgrade to unlock all features and save your data permanently.
+                        <h3 className="font-semibold text-foreground mb-2">Find Your Blessed Match</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Create your permanent Islamic marriage profile and connect with compatible partners.
                         </p>
-                        <ul className="text-xs text-amber-600 space-y-1 mb-4 text-left">
-                          <li>✅ Publish biodata publicly</li>
-                          <li>✅ Access community features</li>
-                          <li>✅ Data persists across devices</li>
-                          <li>✅ Full platform access</li>
-                        </ul>
+                        <div className="grid grid-cols-2 gap-2 mb-4">
+                          <div className="flex items-center gap-2 text-xs text-primary">
+                            <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                            <span>Publish biodata</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-amber-700">
+                            <div className="w-1.5 h-1.5 bg-amber-600 rounded-full" />
+                            <span>AI matching</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-emerald-700">
+                            <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full" />
+                            <span>Community access</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-primary">
+                            <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                            <span>Data persistence</span>
+                          </div>
+                        </div>
                       </div>
                       <Button
                         onClick={() => setShowUpgradeForm(true)}
-                        className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                        className="w-full bg-primary hover:bg-primary/90 rounded-full"
                       >
-                        <Mail className="w-4 h-4 mr-2" />
-                        Upgrade Account
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Create Account
                       </Button>
                     </div>
                   </div>
 
-                  {/* Continue Anonymously */}
-                  <div className="p-6 bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl border border-slate-200 hover:shadow-md transition-shadow">
+                  {/* Continue Exploring */}
+                  <div className="p-6 bg-gradient-to-br from-emerald-500/5 via-background to-primary/5 rounded-xl border border-emerald-500/20 hover:shadow-md transition-shadow">
                     <div className="text-center space-y-4">
-                      <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
-                        <Users className="w-6 h-6 text-slate-600" />
+                      <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto">
+                        <Users className="w-6 h-6 text-emerald-700" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-slate-800 mb-2">Continue Anonymously</h3>
-                        <p className="text-sm text-slate-700 mb-4">
-                          Keep using the app with limited features. Your data won't be saved.
+                        <h3 className="font-semibold text-foreground mb-2">Keep Exploring</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Continue discovering marriage features without commitment.
                         </p>
-                        <ul className="text-xs text-slate-500 space-y-1 mb-4 text-left">
-                          <li>⚠️ Limited features available</li>
-                          <li>⚠️ Data not saved permanently</li>
-                          <li>⚠️ Cannot publish biodata</li>
-                          <li>⚠️ Session may not persist</li>
-                        </ul>
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                            <span>View sample biodatas</span>
+                            <span className="text-muted-foreground/50">•</span>
+                            <span>Test features</span>
+                            <span className="text-muted-foreground/50">•</span>
+                            <span>Browse community</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Your exploration data stays temporary
+                          </p>
+                        </div>
                       </div>
                       <Button
                         onClick={() => navigate('/dashboard')}
                         variant="outline"
-                        className="w-full border-slate-300 text-slate-700 hover:bg-slate-50"
+                        className="w-full border-emerald-500/20 text-emerald-700 hover:bg-emerald-50 rounded-full"
                       >
                         <Users className="w-4 h-4 mr-2" />
-                        Continue to Dashboard
+                        Continue Exploring
                       </Button>
                     </div>
                   </div>
@@ -288,76 +307,97 @@ export default function Login() {
           className="max-w-6xl mx-auto"
         >
           {/* Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-foreground mb-2 font-serif">
-              {t("login.welcome")}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm mb-6 border border-primary/20">
+              <Heart className="w-4 h-4 fill-primary text-primary" />
+              <span>Islamic Marriage Platform</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 font-serif">
+              Begin Your Journey to Finding Love
             </h1>
-            <p className="text-muted-foreground">{t("login.choose")}</p>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+              Join SabrSpace to create meaningful connections through Islamic marriage. Choose how you'd like to start your journey.
+            </p>
           </div>
 
           {/* Split Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Side: Anonymous Access */}
-            <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+            {/* Left Side: Explore Features */}
+            <Card className="bg-gradient-to-br from-primary/5 via-background to-amber-500/5 border-primary/20 shadow-lg">
               <CardHeader className="text-center">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-6 h-6 text-primary" />
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Heart className="w-7 h-7 text-primary" />
                 </div>
-                <CardTitle className="text-primary font-serif">Quick Start</CardTitle>
-                <CardDescription>
-                  Get started immediately without creating an account
+                <CardTitle className="text-primary font-serif text-xl">Explore Marriage Features</CardTitle>
+                <CardDescription className="text-base">
+                  Discover how SabrSpace helps you find meaningful Islamic connections
                 </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <h3 className="font-medium text-sm text-primary">What you can do anonymously:</h3>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                      Browse and view biodata
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                      Create draft biodata (saved temporarily)
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                      Test platform features
-                    </li>
-                  </ul>
+                  <h3 className="font-semibold text-foreground">What you can explore:</h3>
+                  <div className="grid gap-3">
+                    <div className="flex items-start gap-3 p-3 bg-white/60 rounded-lg border border-primary/10">
+                      <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm text-foreground">Marriage Biodata</h4>
+                        <p className="text-xs text-muted-foreground">Create Islamic marriage profiles with religious markers</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 bg-white/60 rounded-lg border border-amber-500/10">
+                      <div className="w-8 h-8 bg-amber-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <MessageSquare className="w-4 h-4 text-amber-700" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm text-foreground">Compatibility Questions</h4>
+                        <p className="text-xs text-muted-foreground">Ask meaningful questions for relationship discovery</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 bg-white/60 rounded-lg border border-emerald-500/10">
+                      <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Users className="w-4 h-4 text-emerald-700" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm text-foreground">Faith Community</h4>
+                        <p className="text-xs text-muted-foreground">Connect with Muslims seeking blessed marriages</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
                   <Button
                     onClick={handleAnonymousLogin}
                     disabled={isLoggingInAnonymously}
-                    className="w-full bg-primary hover:bg-primary/90"
+                    className="w-full bg-primary hover:bg-primary/90 rounded-full h-12 text-base"
                   >
                     {isLoggingInAnonymously ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
                     ) : (
-                      <Users className="w-4 h-4 mr-2" />
+                      <Heart className="w-5 h-5 mr-2" />
                     )}
-                    Continue Anonymously
+                    Start Exploring
                   </Button>
 
                   <p className="text-xs text-muted-foreground text-center">
-                    No email or password required
+                    No registration required • Explore all features
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Right Side: Account Login/Register */}
-            <Card className="bg-white/80 backdrop-blur-sm border-border/50">
+            {/* Right Side: Full Access */}
+            <Card className="bg-white/80 backdrop-blur-sm border-border/50 shadow-lg">
               <CardHeader className="text-center">
-                <div className="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <User className="w-6 h-6 text-secondary-foreground" />
+                <div className="w-14 h-14 bg-gradient-to-br from-emerald-500/10 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/20">
+                  <User className="w-7 h-7 text-primary" />
                 </div>
-                <CardTitle className="font-serif">Account Access</CardTitle>
-                <CardDescription>
-                  Create an account or sign in to unlock all features
+                <CardTitle className="font-serif text-xl">Create Your Account</CardTitle>
+                <CardDescription className="text-base">
+                  Unlock all marriage features and find your blessed match
                 </CardDescription>
               </CardHeader>
 

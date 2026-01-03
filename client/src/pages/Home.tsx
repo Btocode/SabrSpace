@@ -38,7 +38,7 @@ export default function Home() {
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm mb-8 border border-primary/20">
                 <Heart className="w-4 h-4 fill-primary text-primary" />
-                <span className="text-foreground font-serif tracking-wide">Built for Islamic Marriage</span>
+                <span className="text-foreground font-serif tracking-wide">Ask your Wisdom</span>
               </div>
 
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-primary mb-6 leading-tight font-serif">
@@ -46,7 +46,7 @@ export default function Home() {
               </h1>
 
               <p className="text-xl md:text-2xl text-muted-foreground mb-10 leading-relaxed font-light max-w-3xl mx-auto">
-                Discover meaningful connections through Islamic marriage. Create your biodata, ask the right questions, and grow with a supportive community—all guided by faith and values.
+                Create your biodata, ask the right questions, and grow with a supportive community—all guided by faith and values.
               </p>
 
               <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-8">
@@ -119,9 +119,9 @@ export default function Home() {
               >
                 <p className="text-sm text-muted-foreground mb-4">New to SabrSpace?</p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Link href="#marriage">
+                  <Link href="/marriage-guide">
                     <Button variant="outline" size="sm" className="rounded-full border-primary/20 hover:bg-primary/5">
-                      Learn About Marriage Features
+                      Learn About Islamic Marriage
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                   </Link>
