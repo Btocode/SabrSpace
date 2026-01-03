@@ -66,6 +66,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/demo" component={DemoWizard} />
       <Route path="/s/:token" component={PublicResponse} />
+      <Route path="/b/:token" component={BiodataView} />
 
       {/* Protected Routes */}
       <Route path="/dashboard">
@@ -80,11 +81,11 @@ function Router() {
       <Route path="/biodata">
         {() => <ProtectedRoute component={BiodataList} />}
       </Route>
-      <Route path="/biodata/:id">
-        {() => <ProtectedRoute component={BiodataView} />}
-      </Route>
       <Route path="/biodata/create">
         {() => <ProtectedRoute component={BiodataWizard} />}
+      </Route>
+      <Route path="/biodata/:id">
+        {() => <ProtectedRoute component={BiodataView} />}
       </Route>
 
       <Route path="/community">

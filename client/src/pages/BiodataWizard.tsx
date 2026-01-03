@@ -486,28 +486,37 @@ export default function BiodataWizard() {
     };
   }, [form, currentStepData.id, updateStepData, formData]);
 
-  // Load existing biodata if editing
   useEffect(() => {
     const loadExistingData = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const editId = urlParams.get("edit");
+      const editIdRaw = urlParams.get("edit");
 
-      // If user is NOT editing, ensure we start a fresh wizard.
-      // The wizard store is persisted, so without this it can keep updating an old draft.
-      if (!editId) {
+      if (!editIdRaw) {
+        // For new biodata creation, always reset the store to ensure clean state
         reset();
         return;
       }
-
+  
+      // ✅ hard validation
+      if (!/^\d+$/.test(editIdRaw)) {
+        reset();
+        addToast({
+          type: "error",
+          title: "Invalid edit link",
+          description: "That biodata id is not valid.",
+          duration: 4000,
+        });
+        // optional: clean URL
+        navigate("/biodata/create");
+        return;
+      }
+  
       try {
         const token = localStorage.getItem("auth_token");
-        const response = await fetch(
-          api.biodata.get.path.replace(":id", editId),
-          {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          },
-        );
-
+        const response = await fetch(api.biodata.get.path.replace(":id", editIdRaw), {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+  
         if (response.ok) {
           const biodata = await response.json();
           loadExistingBiodata(biodata);
@@ -516,9 +525,10 @@ export default function BiodataWizard() {
         console.error("Failed to load biodata:", error);
       }
     };
-
+  
     loadExistingData();
-  }, [loadExistingBiodata, reset]);
+  }, [loadExistingBiodata, reset, addToast, navigate]);
+  
 
   // Map frontend 8-step data to backend schema
   const mapToBackendSchema = (allData: any) => {
@@ -631,8 +641,15 @@ export default function BiodataWizard() {
     if (hasMeaningfulData(marriage)) {
       // Don't re-send maritalStatus here; it belongs to basic profile.
       payload.willingToRelocate = !!marriage.marriage_related?.after_marriage_location;
-      payload.preferredAgeMin = marriage.desired_spouse?.age_range ? parseInt(marriage.desired_spouse.age_range.split("-")[0]) : undefined;
-      payload.preferredAgeMax = marriage.desired_spouse?.age_range ? parseInt(marriage.desired_spouse.age_range.split("-")[1]) : undefined;
+      const parseIntSafe = (v?: string): number | undefined => {
+        if (!v) return undefined;
+        const n = Number.parseInt(v, 10);
+        return Number.isFinite(n) ? n : undefined;
+      };
+
+      const parts = marriage.desired_spouse?.age_range?.split("-").map((s: string) => s.trim());
+      payload.preferredAgeMin = parts?.[0] ? parseIntSafe(parts[0]) : undefined;
+      payload.preferredAgeMax = parts?.[1] ? parseIntSafe(parts[1]) : undefined;
       payload.preferredEducation = marriage.desired_spouse?.education;
       payload.preferredProfession = marriage.desired_spouse?.occupation;
       payload.preferredLocation = marriage.desired_spouse?.district_preference;
@@ -754,10 +771,35 @@ export default function BiodataWizard() {
 
       if (!response.ok) throw new Error("Failed to complete biodata");
 
-      const savedBiodata = await response.json();
+      let savedBiodata = await response.json();
 
-      // Generate share URL for published biodata
-      if (savedBiodata.status === "published") {
+      // Now publish the biodata
+      const publishResponse = await fetch(
+        api.biodata.publish.path.replace(":id", String(id)),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        },
+      );
+
+      if (publishResponse.ok) {
+        savedBiodata = await publishResponse.json();
+      } else {
+        // If publish fails, still show success but warn that sharing isn't available
+        console.warn("Failed to publish biodata, but completion succeeded");
+        addToast({
+          type: "warning",
+          title: "Biodata completed but not published",
+          description: "Your biodata was saved but may not be shareable yet.",
+          duration: 5000,
+        });
+      }
+
+      // Generate share URL for published or pending review biodata
+      if (savedBiodata.status === "published" || savedBiodata.status === "pending_review") {
         const shareUrl = `${window.location.origin}/b/${savedBiodata.token}`;
         setCreatedBiodataUrl(shareUrl);
       }
@@ -768,6 +810,8 @@ export default function BiodataWizard() {
         description:
           savedBiodata.status === "published"
             ? "Your biodata is now live and shareable."
+            : savedBiodata.status === "pending_review"
+            ? "Your biodata is submitted for review and shareable."
             : "Your biodata has been saved.",
         duration: 4000,
       });

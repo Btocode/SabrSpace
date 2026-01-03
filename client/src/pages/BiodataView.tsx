@@ -122,8 +122,14 @@ function TextBlock({ label, text }: { label: string; text?: string | null }) {
 }
 
 export default function BiodataView() {
-  const params = useParams<{ id: string }>();
-  const id = params?.id;
+  // Handle both /biodata/:id (authenticated) and /b/:token (public) routes
+  const idParams = useParams<{ id: string }>();
+  const tokenParams = useParams<{ token: string }>();
+
+  const id = idParams?.id;
+  const token = tokenParams?.token;
+  const identifier = id || token; // Use either id or token
+  const isPublicView = !!token; // If we have a token param, it's a public view
 
   const { addToast } = useToast();
   const [biodata, setBiodata] = useState<Biodata | null>(null);
@@ -140,29 +146,40 @@ export default function BiodataView() {
 
   useEffect(() => {
     const fetchBiodata = async () => {
-      if (!id) return;
+      if (!identifier) return;
 
       setLoading(true);
       try {
-        const token = localStorage.getItem("auth_token");
+        // For shared links (/b/:token), go directly to public route
+        if (isPublicView) {
+          const publicResponse = await fetch(api.publicBiodata.get.path.replace(":token", token!));
+          if (publicResponse.ok) {
+            const data = await publicResponse.json();
+            setBiodata(data);
+            return;
+          }
+        } else {
+          // For authenticated views (/biodata/:id), try private route first
+          const authToken = localStorage.getItem("auth_token");
 
-        // First try the private route (owners + accessible biodata)
-        const response = await fetch(api.biodata.get.path.replace(":id", id), {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+          // First try the private route (owners + accessible biodata)
+          const response = await fetch(api.biodata.get.path.replace(":id", id!), {
+            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+          });
 
-        if (response.ok) {
-          const data = await response.json();
-          setBiodata(data);
-          return;
-        }
+          if (response.ok) {
+            const data = await response.json();
+            setBiodata(data);
+            return;
+          }
 
-        // Fallback: public route (published only)
-        const publicResponse = await fetch(api.publicBiodata.get.path.replace(":token", id));
-        if (publicResponse.ok) {
-          const data = await publicResponse.json();
-          setBiodata(data);
-          return;
+          // Fallback: public route (published only)
+          const publicResponse = await fetch(api.publicBiodata.get.path.replace(":token", id!));
+          if (publicResponse.ok) {
+            const data = await publicResponse.json();
+            setBiodata(data);
+            return;
+          }
         }
 
         setBiodata(null);
@@ -187,13 +204,16 @@ export default function BiodataView() {
     };
 
     fetchBiodata();
-  }, [id, addToast]);
+  }, [identifier, id, token, isPublicView, addToast]);
 
   const shareUrl = useMemo(() => {
     if (!biodata) return "";
     if (typeof window === "undefined") return "";
     return `${window.location.origin}/b/${biodata.token}`;
   }, [biodata]);
+
+  // Don't show share section for public views (already a shared link)
+  const showShareSection = !isPublicView && hasAuth;
 
   const getStatusBadge = (status: Biodata["status"]) => {
     const base = "border border-border/60";
@@ -424,8 +444,8 @@ export default function BiodataView() {
                   </div>
                 </div>
 
-                {/* Share bar */}
-                {!!shareUrl && (
+                {/* Share bar - only show for authenticated users viewing their own biodata */}
+                {showShareSection && !!shareUrl && (
                   <div className="mt-6 flex flex-col md:flex-row md:items-center gap-3 rounded-2xl border border-border/50 bg-background/60 backdrop-blur p-4">
                     <div className="text-sm text-muted-foreground flex-1">
                       Share link

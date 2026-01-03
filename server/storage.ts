@@ -62,6 +62,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getQuestionSet(id: number): Promise<QuestionSetWithQuestions | undefined> {
+    if (!Number.isFinite(id)) throw new Error("Invalid question set id");
+
     const set = await db.query.questionSets.findFirst({
       where: eq(questionSets.id, id),
       with: {
@@ -274,6 +276,8 @@ export class DatabaseStorage implements IStorage {
 
   // Biodata methods
   async getBiodata(id: number): Promise<BiodataWithDetails | undefined> {
+    if (!Number.isFinite(id)) throw new Error("Invalid biodata id");
+
     const biodataEntry = await db.query.biodata.findFirst({
       where: eq(biodata.id, id),
       with: {
@@ -324,6 +328,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateBiodata(id: number, userId: string, data: UpdateBiodataRequest): Promise<Biodata | undefined> {
+    if (!Number.isFinite(id)) throw new Error("Invalid biodata id");
+
     const existing = await this.getBiodata(id);
     if (!existing || existing.userId !== userId) return undefined;
 
@@ -364,6 +370,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteBiodata(id: number, userId: string): Promise<void> {
+    if (!Number.isFinite(id)) throw new Error("Invalid biodata id");
+
     await db.delete(biodata)
       .where(and(eq(biodata.id, id), eq(biodata.userId, userId)));
   }
@@ -375,6 +383,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async publishBiodata(id: number, userId: string): Promise<Biodata | undefined> {
+    if (!Number.isFinite(id)) throw new Error("Invalid biodata id");
+
     // Only allow publishing if user is authenticated (not anonymous)
     // Check if user has email (anonymous users don't)
     const user = await db.query.users.findFirst({
@@ -402,6 +412,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async reviewBiodata(id: number, reviewerId: string, status: string, notes?: string): Promise<Biodata | undefined> {
+    if (!Number.isFinite(id)) throw new Error("Invalid biodata id");
     // Start a transaction
     const result = await db.transaction(async (tx) => {
       // Update biodata status

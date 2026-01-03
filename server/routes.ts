@@ -299,7 +299,10 @@ export async function registerRoutes(
         return res.status(401).json({ message: "Authentication required" });
       }
 
-      const biodataId = Number(req.params.id);
+      const biodataId = Number.parseInt(req.params.id, 10);
+      if (!Number.isFinite(biodataId)) {
+        return res.status(400).json({ message: "Invalid biodata id" });
+      }
       const stepId = String(req.params.stepId);
 
       let updatePayload: any = {};
@@ -358,7 +361,7 @@ export async function registerRoutes(
   // Public biodata routes
   app.get(api.publicBiodata.get.path, async (req, res) => {
     const biodataEntry = await storage.getBiodataByToken(req.params.token);
-    if (!biodataEntry || biodataEntry.status !== 'published') {
+    if (!biodataEntry || (biodataEntry.status !== 'published' && biodataEntry.status !== 'pending_review')) {
       return res.status(404).json({ message: "Biodata not found" });
     }
     res.json(biodataEntry);
@@ -415,7 +418,11 @@ export async function registerRoutes(
 
   app.get(api.biodata.get.path, optionalAuthenticateToken, async (req, res) => {
     const userId = getUserId(req);
-    const biodataEntry = await storage.getBiodata(Number(req.params.id));
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ message: "Invalid biodata id" });
+    }
+    const biodataEntry = await storage.getBiodata(id);
 
     if (!biodataEntry) {
       return res.status(404).json({ message: "Biodata not found" });
@@ -451,7 +458,10 @@ export async function registerRoutes(
       } catch (validationErr: any) {
         return res.status(400).json({ message: "Validation error", errors: validationErr.errors });
       }
-      const biodataId = Number(req.params.id);
+      const biodataId = Number.parseInt(req.params.id, 10);
+      if (!Number.isFinite(biodataId)) {
+        return res.status(400).json({ message: "Invalid biodata id" });
+      }
       
       // Update with only the fields provided in the request
       const updatedBiodata = await storage.updateBiodata(biodataId, userId, input);
@@ -479,14 +489,22 @@ export async function registerRoutes(
     if (!userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
-    await storage.deleteBiodata(Number(req.params.id), userId);
+    const biodataId = Number.parseInt(req.params.id, 10);
+    if (!Number.isFinite(biodataId)) {
+      return res.status(400).json({ message: "Invalid biodata id" });
+    }
+    await storage.deleteBiodata(biodataId, userId);
     res.status(204).send();
   });
 
   app.post(api.biodata.publish.path, authenticateToken, async (req, res) => {
     try {
       const userId = getUserId(req);
-      const publishedBiodata = await storage.publishBiodata(Number(req.params.id), userId);
+      const biodataId = Number.parseInt(req.params.id, 10);
+      if (!Number.isFinite(biodataId)) {
+        return res.status(400).json({ message: "Invalid biodata id" });
+      }
+      const publishedBiodata = await storage.publishBiodata(biodataId, userId);
       if (!publishedBiodata) return res.status(404).json({ message: "Biodata not found" });
       res.json(publishedBiodata);
     } catch (err: any) {
@@ -504,7 +522,10 @@ export async function registerRoutes(
         return res.status(401).json({ message: "Authentication required" });
       }
 
-      const id = Number(req.params.id);
+      const id = Number.parseInt(req.params.id, 10);
+      if (!Number.isFinite(id)) {
+        return res.status(400).json({ message: "Invalid biodata id" });
+      }
       const biodataEntry = await storage.getBiodata(id);
       if (!biodataEntry || biodataEntry.userId !== userId) {
         return res.status(404).json({ message: "Biodata not found" });
@@ -548,8 +569,12 @@ export async function registerRoutes(
     try {
       // TODO: Add admin role check
       const reviewerId = getUserId(req);
+      const biodataId = Number.parseInt(req.params.id, 10);
+      if (!Number.isFinite(biodataId)) {
+        return res.status(400).json({ message: "Invalid biodata id" });
+      }
       const { status, notes } = req.body;
-      const reviewedBiodata = await storage.reviewBiodata(Number(req.params.id), reviewerId, status, notes);
+      const reviewedBiodata = await storage.reviewBiodata(biodataId, reviewerId, status, notes);
       if (!reviewedBiodata) return res.status(404).json({ message: "Biodata not found" });
       res.json(reviewedBiodata);
     } catch (err) {
