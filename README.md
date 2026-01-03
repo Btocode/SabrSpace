@@ -219,3 +219,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **"And whoever relies upon Allah - then He is sufficient for him."** - Quran 65:3
 
 *Built with love for fostering meaningful, sincere connections in our communities.*
+

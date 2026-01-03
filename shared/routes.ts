@@ -265,6 +265,17 @@ export const api = {
       },
     },
   },
+  dev: {
+    seedSampleBiodata: {
+      method: 'POST' as const,
+      path: '/api/dev/seed-biodata',
+      responses: {
+        201: z.custom<typeof biodata.$inferSelect>(),
+        401: errorSchemas.unauthorized,
+        403: errorSchemas.unauthorized,
+      },
+    },
+  },
 };
 
 export function buildUrl(path: string, params?: Record<string, string | number>): string {

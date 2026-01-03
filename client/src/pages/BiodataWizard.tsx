@@ -434,6 +434,7 @@ export default function BiodataWizard() {
     setIsLoading,
     updateStepData,
     loadExistingBiodata,
+    reset,
   } = useBiodataWizardStore();
 
   const currentStepData = steps[currentStep];
@@ -491,7 +492,12 @@ export default function BiodataWizard() {
       const urlParams = new URLSearchParams(window.location.search);
       const editId = urlParams.get("edit");
 
-      if (!editId) return;
+      // If user is NOT editing, ensure we start a fresh wizard.
+      // The wizard store is persisted, so without this it can keep updating an old draft.
+      if (!editId) {
+        reset();
+        return;
+      }
 
       try {
         const token = localStorage.getItem("auth_token");
@@ -512,7 +518,7 @@ export default function BiodataWizard() {
     };
 
     loadExistingData();
-  }, [loadExistingBiodata]);
+  }, [loadExistingBiodata, reset]);
 
   // Map frontend 8-step data to backend schema
   const mapToBackendSchema = (allData: any) => {

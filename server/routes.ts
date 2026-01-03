@@ -7,6 +7,7 @@ import {
   users,
   questionSets,
   questions,
+  biodata,
   createBiodataSchema,
   updateBiodataSchema,
   biodataWizardBasicProfileSchema,
@@ -74,6 +75,103 @@ export async function registerRoutes(
   const getUserId = (req: any): string => {
     return req.user?.id;
   };
+
+  app.post(api.dev.seedSampleBiodata.path, authenticateToken, async (req, res) => {
+    try {
+      if (process.env.NODE_ENV === "production") {
+        return res.status(404).json({ message: "Not found" });
+      }
+
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const created = await storage.createBiodata(userId, {
+        fullName: "Muhammad Ahsan Rahman",
+        gender: "male",
+        dateOfBirth: new Date(1998, 7, 16),
+        height: "5'8\"",
+        weight: "72 kg",
+        complexion: "wheatish",
+        bloodGroup: "O+",
+        phone: "+8801XXXXXXXXX",
+        email: "ahsan.sample@example.com",
+        address: "Uttara, Dhaka",
+        city: "Dhaka",
+        state: "Dhaka",
+        country: "Bangladesh",
+        educationLevel: "bachelors",
+        educationDetails:
+          "B.Sc. in Computer Science, 2020 (CGPA 3.75/4.00) | HSC: 2016 (Science) | SSC: 2014 (Science)",
+        profession: "Software Engineer",
+        occupation:
+          "Backend-focused engineer working on scalable systems, clean architecture, and product quality.",
+        annualIncome: "900000",
+        workLocation: "Dhaka",
+        fatherName: "Abdur Rahman",
+        fatherOccupation: "Business",
+        motherName: "Sultana Begum",
+        motherOccupation: "Homemaker",
+        siblingsCount: 3,
+        siblingsDetails:
+          "1 elder brother (married), 1 younger sister (studying), 1 younger brother (working)",
+        religion: "islam",
+        sect: "sunni",
+        religiousPractice: "regular",
+        prayerFrequency: "5_times",
+        fasting: "ramadan_only",
+        quranReading: "weekly",
+        maritalStatus: "never_married",
+        willingToRelocate: true,
+        preferredAgeMin: 20,
+        preferredAgeMax: 27,
+        preferredEducation: "Bachelor's or above",
+        preferredProfession: "Any halal profession",
+        preferredLocation: "Dhaka / nearby",
+        otherPreferences:
+          "Practicing Muslimah, respectful with elders, kind communication, prioritizes deen and family.",
+        hobbies:
+          "Reading Islamic books, long walks, gym, volunteering, coding side-projects",
+        languages: "Bangla, English",
+        aboutMe:
+          "I try to live with ihsan—being consistent in salah, honest in speech, and gentle with people. I value family, gratitude, and continuous growth. I keep a clean lifestyle and prefer simple, respectful communication.",
+        expectations:
+          "I want a marriage built on taqwa, mercy, and teamwork. I expect mutual respect, clear boundaries, and a home where deen is prioritized. We can grow together—emotionally, spiritually, and practically.",
+      });
+
+      await storage.updateBiodata(created.id, userId, {
+        profilePhoto:
+          "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=512&q=80",
+        additionalPhotos: [
+          "https://images.unsplash.com/photo-1520975958225-ffbe6f2f1a46?auto=format&fit=crop&w=1024&q=80",
+          "https://images.unsplash.com/photo-1520975912087-24aa3c3b13aa?auto=format&fit=crop&w=1024&q=80",
+        ],
+      });
+
+      await db
+        .update(biodata)
+        .set({
+          status: "published",
+          publishedAt: new Date(),
+          reviewedAt: new Date(),
+          reviewedBy: userId,
+          reviewNotes: "Dev seed: auto-approved for testing preview + PDF export.",
+          updatedAt: new Date(),
+        })
+        .where(eq(biodata.id, created.id));
+
+      const finalBiodata = await storage.getBiodata(created.id);
+      if (!finalBiodata) {
+        return res.status(500).json({ message: "Failed to create sample biodata" });
+      }
+
+      return res.status(201).json(finalBiodata);
+    } catch (err) {
+      console.error("Dev seed biodata error:", err);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   app.get(api.sets.list.path, authenticateToken, async (req, res) => {
     const userId = getUserId(req);
@@ -317,14 +415,20 @@ export async function registerRoutes(
 
   app.get(api.biodata.get.path, optionalAuthenticateToken, async (req, res) => {
     const userId = getUserId(req);
-    if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
     const biodataEntry = await storage.getBiodata(Number(req.params.id));
-    if (!biodataEntry || biodataEntry.userId !== userId) {
+
+    if (!biodataEntry) {
       return res.status(404).json({ message: "Biodata not found" });
     }
+
+    // Allow viewing if:
+    // 1. User is authenticated and owns the biodata, OR
+    // 2. Biodata is published (public access)
+    if (biodataEntry.status === 'published' || (userId && biodataEntry.userId === userId)) {
     res.json(biodataEntry);
+    } else {
+      return res.status(404).json({ message: "Biodata not found" });
+    }
   });
 
   app.patch(api.biodata.update.path, optionalAuthenticateToken, async (req, res) => {
@@ -334,9 +438,16 @@ export async function registerRoutes(
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      let input: any;
+      let input = { ...req.body };
+
+      // Preprocess dateOfBirth if it's a string
+      if (input.dateOfBirth && typeof input.dateOfBirth === 'string') {
+        input.dateOfBirth = new Date(input.dateOfBirth);
+      }
+
+      let validatedInput;
       try {
-        input = updateBiodataSchema.parse(req.body);
+        validatedInput = updateBiodataSchema.parse(input);
       } catch (validationErr: any) {
         return res.status(400).json({ message: "Validation error", errors: validationErr.errors });
       }

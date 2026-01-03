@@ -19,6 +19,7 @@ import PublicResponse from "@/pages/PublicResponse";
 import DemoWizard from "@/pages/DemoWizard";
 import Login from "@/pages/Login";
 import BiodataList from "@/pages/BiodataList";
+import BiodataView from "@/pages/BiodataView";
 import BiodataWizard from "@/pages/BiodataWizard";
 import Community from "./pages/Community";
 import NotFound from "@/pages/not-found";
@@ -78,6 +79,9 @@ function Router() {
       </Route>
       <Route path="/biodata">
         {() => <ProtectedRoute component={BiodataList} />}
+      </Route>
+      <Route path="/biodata/:id">
+        {() => <ProtectedRoute component={BiodataView} />}
       </Route>
       <Route path="/biodata/create">
         {() => <ProtectedRoute component={BiodataWizard} />}

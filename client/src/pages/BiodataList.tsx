@@ -32,20 +32,6 @@ export default function BiodataList() {
     },
   });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-pattern">
-        <Navbar />
-        <div className="container mx-auto p-6">
-          <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Loading your biodata...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const getStatusBadge = (status: string) => {
     const variants = {
       draft: "secondary",
@@ -128,6 +114,15 @@ export default function BiodataList() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
+          {isLoading ? (
+            <div className="text-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+              <p className="mt-4 text-muted-foreground">Loading your biodata...</p>
+            </div>
+          ) : null}
+
+          {!isLoading ? (
+            <>
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-2xl font-semibold">Your Biodata Profiles</h2>
@@ -504,6 +499,8 @@ export default function BiodataList() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+            </>
+          ) : null}
         </div>
       </div>
     </div>
