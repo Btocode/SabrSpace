@@ -1,15 +1,19 @@
 import { useState, useEffect } from "react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, ArrowRight, ArrowLeft, Share2, Copy, Check, Sparkles, Wand2, Heart, Shield } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Trash2, ArrowRight, ArrowLeft, Share2, Copy, Check, Sparkles, Wand2, Heart, Shield, FileText, MessageSquare, User, Calendar, MapPin, BookOpen, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { Navbar } from "@/components/Navbar";
 
 type QuestionType = "TEXT" | "CHOICE";
+type DemoType = "biodata" | "questions" | null;
 
 interface Question {
   id: string;
@@ -20,7 +24,9 @@ interface Question {
 }
 
 export default function DemoWizard() {
-  const [step, setStep] = useState(1);
+  const [demoType, setDemoType] = useState<DemoType>(null);
+  const [step, setStep] = useState(0); // Start with choice screen
+  // Question set state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<Question[]>([
@@ -28,6 +34,25 @@ export default function DemoWizard() {
   ]);
   const [requireAttestation, setRequireAttestation] = useState(false);
   const [shareToken, setShareToken] = useState<string | null>(null);
+  // Biodata state
+  const [biodataStep, setBiodataStep] = useState(1);
+  const [biodataData, setBiodataData] = useState({
+    fullName: "",
+    biodataType: "",
+    maritalStatus: "",
+    birthMonth: "",
+    birthYear: "",
+    height: "",
+    nationality: "Bangladeshi",
+    country: "",
+    division: "",
+    district: "",
+    education: "",
+    occupation: "",
+    monthlyIncome: "",
+    marriageTimeline: "",
+    desiredQualities: ""
+  });
   const { toast } = useToast();
 
   const addQuestion = () => {
@@ -61,238 +86,779 @@ export default function DemoWizard() {
     toast({ title: "Link copied to clipboard" });
   };
 
-  return (
-    <div className="min-h-screen bg-background relative overflow-hidden flex flex-col items-center justify-center p-4 selection:bg-primary/20">
-      {/* Premium Geometric Pattern */}
-      <div className="absolute inset-0 opacity-[0.05] pointer-events-none -z-10" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60 0l60 60-60 60L0 60z' fill='%230f766e' fill-rule='evenodd'/%3E%3C/svg%3E")` }} />
+  const handleBiodataComplete = () => {
+    const token = Math.random().toString(36).substring(2, 15);
+    setShareToken(token);
+    setStep(99); // Special step for biodata completion
+    toast({ title: "Demo biodata created!" });
+  };
 
-      <div className="w-full max-w-3xl space-y-8 relative z-10">
-        <div className="text-center space-y-2 mb-4">
-          <div className="text-primary font-serif italic text-xl">SabrSpace Wizard</div>
-          <div className="h-0.5 w-16 bg-accent/40 mx-auto rounded-full" />
-        </div>
+  return (
+    <div className="min-h-screen bg-pattern">
+      <Navbar />
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
 
         <AnimatePresence mode="wait">
-          {step === 1 && (
+          {step === 0 && (
             <motion.div
-              key="step1"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
+              key="choice"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-8"
             >
-              <Card className="border-primary/10 shadow-2xl shadow-primary/5 bg-card/80 backdrop-blur-xl rounded-[3rem] overflow-hidden">
-                <CardHeader className="text-center p-12 space-y-4">
-                  <div className="mx-auto w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mb-4 transform -rotate-12 group-hover:rotate-0 transition-transform duration-500">
-                    <Sparkles className="text-primary w-10 h-10" />
-                  </div>
-                  <CardTitle className="text-4xl font-serif text-primary tracking-tight">Naming your Journey</CardTitle>
-                  <CardDescription className="text-lg font-light text-muted-foreground">Every great connection starts with a clear intention.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-12 pt-0 space-y-10">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="title" className="text-lg font-medium ml-2">Set Title</Label>
-                      <Input 
-                        id="title" 
-                        placeholder="e.g., Marriage Compatibility, Family Legacy, Heart Conversations" 
-                        value={title} 
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="h-16 rounded-3xl bg-muted/30 border-none text-xl px-8 focus-visible:ring-2 focus-visible:ring-primary/20"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="desc" className="text-lg font-medium ml-2">Context <span className="text-muted-foreground font-normal">(Optional)</span></Label>
-                      <Input 
-                        id="desc" 
-                        placeholder="Briefly set the mood for your responder" 
-                        value={description} 
-                        onChange={(e) => setDescription(e.target.value)}
-                        className="h-16 rounded-3xl bg-muted/30 border-none text-xl px-8 focus-visible:ring-2 focus-visible:ring-primary/20"
-                      />
-                    </div>
-                  </div>
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-foreground mb-4">Choose Your Demo Experience</h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Select which feature you'd like to explore. Both demos are fully interactive and showcase the real experience.
+                </p>
+              </div>
 
-                  <div className="bg-amber-50/50 p-8 rounded-3xl border border-amber-100 flex items-center gap-6 group cursor-pointer" onClick={() => setRequireAttestation(!requireAttestation)}>
-                    <Checkbox 
-                      id="attestation" 
-                      checked={requireAttestation} 
-                      onCheckedChange={(checked) => setRequireAttestation(!!checked)}
-                      className="w-7 h-7 rounded-lg border-amber-300 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600 transition-all"
-                    />
-                    <div className="space-y-1">
-                      <Label htmlFor="attestation" className="text-xl font-serif text-amber-900 cursor-pointer">Require Oath of Truth</Label>
-                      <p className="text-sm text-amber-600/70 font-medium">Asks responders to testify in the name of Allah before answering.</p>
+              <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                {/* Biodata Demo */}
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="border border-primary/20 rounded-2xl p-8 hover:border-primary/40 transition-all duration-300 hover:shadow-lg cursor-pointer bg-gradient-to-br from-primary/5 to-primary/10"
+                  onClick={() => { setDemoType('biodata'); setStep(1); }}
+                >
+                  <div className="text-center space-y-6">
+                    <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto border border-primary/20">
+                      <Heart className="w-8 h-8 text-primary" />
                     </div>
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-foreground">Marriage Biodata Creator</h3>
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        Experience creating a comprehensive Islamic marriage profile with religious markers and family details
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      <span className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full">8-Step Process</span>
+                      <span className="px-3 py-1 bg-emerald-500/10 text-emerald-700 text-xs rounded-full">Islamic Focus</span>
+                    </div>
+                    <Button className="w-full rounded-full">
+                      Try Biodata Demo
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
                   </div>
+                </motion.div>
 
-                  <Button className="w-full h-20 text-2xl rounded-3xl bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/20 transition-all" onClick={() => setStep(2)}>
-                    Begin Designing <ArrowRight className="ml-3 w-6 h-6" />
+                {/* Question Set Demo */}
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="border border-amber-500/20 rounded-2xl p-8 hover:border-amber-500/40 transition-all duration-300 hover:shadow-lg cursor-pointer bg-gradient-to-br from-amber-500/5 to-amber-500/10"
+                  onClick={() => { setDemoType('questions'); setStep(1); }}
+                >
+                  <div className="text-center space-y-6">
+                    <div className="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center mx-auto border border-amber-500/20">
+                      <MessageSquare className="w-8 h-8 text-amber-700" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-foreground">Question Set Builder</h3>
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        Create meaningful question sets for compatibility assessment with Islamic attestation
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      <span className="px-3 py-1 bg-amber-500/10 text-amber-700 text-xs rounded-full">Custom Questions</span>
+                      <span className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full">Anonymous Responses</span>
+                    </div>
+                    <Button className="w-full rounded-full bg-amber-600 hover:bg-amber-700">
+                      Try Question Demo
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </div>
+                </motion.div>
+              </div>
+
+              <div className="text-center pt-8 border-t border-border/50">
+                <Link href="/marriage-guide">
+                  <Button variant="ghost" className="rounded-full text-primary hover:bg-primary/5">
+                    Learn About Islamic Marriage →
                   </Button>
-                </CardContent>
-              </Card>
+                </Link>
+              </div>
             </motion.div>
           )}
 
-          {step === 2 && (
+          {/* Biodata Demo Steps */}
+          {demoType === 'biodata' && biodataStep >= 1 && (
             <motion.div
-              key="step2"
+              key={`biodata-step${biodataStep}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <div className="max-w-4xl mx-auto">
+                {/* Header - Matching real wizard */}
+                <div className="text-center mb-8">
+                  <h1 className="text-3xl font-bold font-serif text-primary mb-2">
+                    Create Marriage Biodata (Demo)
+                  </h1>
+                  <p className="text-muted-foreground">
+                    Step {biodataStep} of 3: {
+                      biodataStep === 1 ? 'Basic Profile' :
+                      biodataStep === 2 ? 'Address & Location' :
+                      'Education & Career'
+                    }
+                  </p>
+                </div>
+
+                {/* Step Content - Matching real wizard layout */}
+                <div className="mb-8">
+                  {biodataStep === 1 && (
+                    <div className="space-y-6">
+                      <h3 className="text-xl font-serif text-primary">Basic Profile</h3>
+                      <p className="text-muted-foreground">Let's start with your fundamental information</p>
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="fullName">Full Name</Label>
+                          <Input
+                            id="fullName"
+                            placeholder="Enter your full name"
+                            value={biodataData.fullName}
+                            onChange={(e) => setBiodataData(prev => ({ ...prev, fullName: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Looking for</Label>
+                          <Select value={biodataData.biodataType} onValueChange={(value) => setBiodataData(prev => ({ ...prev, biodataType: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="groom">Groom</SelectItem>
+                              <SelectItem value="bride">Bride</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Marital Status</Label>
+                          <Select value={biodataData.maritalStatus} onValueChange={(value) => setBiodataData(prev => ({ ...prev, maritalStatus: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="unmarried">Unmarried</SelectItem>
+                              <SelectItem value="married">Married</SelectItem>
+                              <SelectItem value="divorced">Divorced</SelectItem>
+                              <SelectItem value="widowed">Widowed</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Height</Label>
+                          <Select value={biodataData.height} onValueChange={(value) => setBiodataData(prev => ({ ...prev, height: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select height" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={'5\'0"'}>{'5\'0"'}</SelectItem>
+                              <SelectItem value={'5\'2"'}>{'5\'2"'}</SelectItem>
+                              <SelectItem value={'5\'4"'}>{'5\'4"'}</SelectItem>
+                              <SelectItem value={'5\'6"'}>{'5\'6"'}</SelectItem>
+                              <SelectItem value={'5\'8"'}>{'5\'8"'}</SelectItem>
+                              <SelectItem value={'5\'10"'}>{'5\'10"'}</SelectItem>
+                              <SelectItem value={'6\'0"'}>{'6\'0"'}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {biodataStep === 2 && (
+                    <div className="space-y-6">
+                      <h3 className="text-xl font-serif text-primary">Address & Location</h3>
+                      <p className="text-muted-foreground">Where your roots and future lie</p>
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label>Country</Label>
+                          <Select value={biodataData.country} onValueChange={(value) => setBiodataData(prev => ({ ...prev, country: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select country" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Bangladesh">Bangladesh</SelectItem>
+                              <SelectItem value="Pakistan">Pakistan</SelectItem>
+                              <SelectItem value="India">India</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Division/State</Label>
+                          <Input
+                            placeholder="e.g., Dhaka, Punjab, Maharashtra"
+                            value={biodataData.division}
+                            onChange={(e) => setBiodataData(prev => ({ ...prev, division: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>District/City</Label>
+                          <Input
+                            placeholder="e.g., Dhaka, Lahore, Mumbai"
+                            value={biodataData.district}
+                            onChange={(e) => setBiodataData(prev => ({ ...prev, district: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Nationality</Label>
+                          <Input
+                            placeholder="e.g., Bangladeshi, Pakistani"
+                            value={biodataData.nationality}
+                            onChange={(e) => setBiodataData(prev => ({ ...prev, nationality: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {biodataStep === 3 && (
+                    <div className="space-y-6">
+                      <h3 className="text-xl font-serif text-primary">Education & Career</h3>
+                      <p className="text-muted-foreground">Your foundation for the future</p>
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label>Education Level</Label>
+                          <Select value={biodataData.education} onValueChange={(value) => setBiodataData(prev => ({ ...prev, education: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select education" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Bachelors">Bachelor's Degree</SelectItem>
+                              <SelectItem value="Masters">Master's Degree</SelectItem>
+                              <SelectItem value="PhD">PhD</SelectItem>
+                              <SelectItem value="Diploma">Diploma</SelectItem>
+                              <SelectItem value="High School">High School</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Occupation</Label>
+                          <Input
+                            placeholder="e.g., Software Engineer, Teacher, Doctor"
+                            value={biodataData.occupation}
+                            onChange={(e) => setBiodataData(prev => ({ ...prev, occupation: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Monthly Income</Label>
+                          <Select value={biodataData.monthlyIncome} onValueChange={(value) => setBiodataData(prev => ({ ...prev, monthlyIncome: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select income range" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Under 25k">Under 25,000</SelectItem>
+                              <SelectItem value="25k-50k">25,000 - 50,000</SelectItem>
+                              <SelectItem value="50k-100k">50,000 - 100,000</SelectItem>
+                              <SelectItem value="Above 100k">Above 100,000</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Marriage Timeline</Label>
+                          <Select value={biodataData.marriageTimeline} onValueChange={(value) => setBiodataData(prev => ({ ...prev, marriageTimeline: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select timeline" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Immediately">Immediately</SelectItem>
+                              <SelectItem value="3-6 months">3-6 months</SelectItem>
+                              <SelectItem value="6-12 months">6-12 months</SelectItem>
+                              <SelectItem value="1-2 years">1-2 years</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Desired Qualities in Partner</Label>
+                        <Input
+                          placeholder="e.g., Religious, family-oriented, honest, educated"
+                          value={biodataData.desiredQualities}
+                          onChange={(e) => setBiodataData(prev => ({ ...prev, desiredQualities: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom Navigation - Matching real wizard */}
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-lg border-t z-10">
+                  <div className="container max-w-4xl mx-auto">
+                    <div className="flex justify-between items-center">
+                      <Button
+                        onClick={biodataStep === 1 ? () => { setDemoType(null); setStep(0); } : () => setBiodataStep(biodataStep - 1)}
+                        variant="outline"
+                        className="gap-2"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        {biodataStep === 1 ? 'Back to Choice' : 'Previous'}
+                      </Button>
+
+                      <div className="flex-1 max-w-md mx-4">
+                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                          <span>{Math.round((biodataStep / 3) * 100)}% Complete</span>
+                          <span>Step {biodataStep} of 3</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div
+                            className="bg-primary h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${(biodataStep / 3) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={biodataStep === 3 ? handleBiodataComplete : () => setBiodataStep(biodataStep + 1)}
+                        className="gap-2"
+                      >
+                        {biodataStep === 3 ? (
+                          <>
+                            <Check className="w-4 h-4" />
+                            Complete Demo
+                          </>
+                        ) : (
+                          <>
+                            Next
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {demoType === 'biodata' && biodataStep === 2 && (
+            <motion.div
+              key="biodata-step2"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="w-full space-y-6"
             >
-              <div className="flex items-center justify-between mb-2">
-                <Button variant="ghost" size="lg" onClick={() => setStep(1)} className="rounded-full gap-2 px-6">
-                  <ArrowLeft className="w-5 h-5" /> Back
-                </Button>
-                <div className="bg-primary/5 px-6 py-2 rounded-full border border-primary/10 text-primary font-serif italic">
-                  Drafting {questions.length} Question{questions.length > 1 ? 's' : ''}
-                </div>
-              </div>
-
-              <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
-                {questions.map((q, index) => (
-                  <motion.div
-                    key={q.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    <Card className="border-primary/5 shadow-xl shadow-primary/5 rounded-[2.5rem] bg-card/90 overflow-hidden relative group">
-                      <div className="absolute top-0 left-0 w-1.5 h-full bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <CardContent className="p-10 space-y-8">
-                        <div className="flex justify-between items-start gap-6">
-                          <div className="flex-1 space-y-3">
-                            <div className="flex items-center gap-3">
-                              <span className="text-accent font-serif font-bold text-lg">Question {index + 1}</span>
-                              <div className="h-px flex-1 bg-border/40" />
-                            </div>
-                            <Input 
-                              placeholder="Type your question prompt here..." 
-                              value={q.prompt} 
-                              onChange={(e) => updateQuestion(q.id, { prompt: e.target.value })} 
-                              className="h-16 rounded-2xl bg-muted/20 border-none text-xl px-6 focus-visible:ring-2 focus-visible:ring-primary/10 transition-all placeholder:text-muted-foreground/30"
-                            />
-                          </div>
-                          {questions.length > 1 && (
-                            <Button variant="ghost" size="icon" className="h-12 w-12 text-destructive/40 hover:text-destructive hover:bg-destructive/5 rounded-2xl mt-8" onClick={() => removeQuestion(q.id)}>
-                              <Trash2 className="w-5 h-5" />
-                            </Button>
-                          )}
-                        </div>
-
-                        <div className="flex flex-col md:flex-row items-center gap-10">
-                          <RadioGroup 
-                            defaultValue={q.type} 
-                            className="flex items-center gap-8" 
-                            onValueChange={(val) => updateQuestion(q.id, { type: val as QuestionType })}
-                          >
-                            <div className="flex items-center space-x-3 cursor-pointer group/radio">
-                              <RadioGroupItem value="TEXT" id={`text-${q.id}`} className="w-5 h-5" />
-                              <Label htmlFor={`text-${q.id}`} className="text-lg cursor-pointer">Text Response</Label>
-                            </div>
-                            <div className="flex items-center space-x-3 cursor-pointer group/radio">
-                              <RadioGroupItem value="CHOICE" id={`choice-${q.id}`} className="w-5 h-5" />
-                              <Label htmlFor={`choice-${q.id}`} className="text-lg cursor-pointer">Multiple Choice</Label>
-                            </div>
-                          </RadioGroup>
-                          
-                          <div className="h-8 w-px bg-border/40 hidden md:block" />
-                          
-                          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => updateQuestion(q.id, { required: !q.required })}>
-                            <Checkbox 
-                              id={`req-${q.id}`} 
-                              checked={q.required} 
-                              onCheckedChange={(val) => updateQuestion(q.id, { required: !!val })} 
-                              className="w-5 h-5 rounded-md"
-                            />
-                            <Label htmlFor={`req-${q.id}`} className="text-lg cursor-pointer">Mandatory</Label>
-                          </div>
-                        </div>
-
-                        {q.type === "CHOICE" && (
-                          <motion.div 
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            className="space-y-4 pt-4 border-t border-border/40"
-                          >
-                            <Label className="text-sm font-medium text-muted-foreground ml-2 uppercase tracking-widest">Available Options</Label>
-                            <Input 
-                              placeholder="Option A, Option B, Option C (separate with commas)" 
-                              onChange={(e) => updateQuestion(q.id, { options: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })} 
-                              className="h-14 rounded-2xl bg-muted/20 border-none px-6 focus-visible:ring-1 focus-visible:ring-primary/10"
-                            />
-                          </motion.div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-
-              <div className="pt-6 space-y-6">
-                <Button variant="outline" className="w-full h-16 rounded-[2rem] border-dashed border-2 border-primary/20 text-lg hover:bg-primary/5 hover:border-primary/40 transition-all duration-300" onClick={addQuestion}>
-                  <Plus className="mr-3 w-5 h-5" /> Add New Question
-                </Button>
-
-                <Button className="w-full h-20 text-2xl rounded-[2.5rem] bg-teal-800 hover:bg-teal-900 shadow-2xl shadow-teal-900/10 group" onClick={handleCreate}>
-                  Seal & Create Sharing Link
-                  <Wand2 className="ml-3 w-6 h-6 group-hover:rotate-12 transition-transform" />
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
-          {step === 3 && (
-            <motion.div
-              key="step3"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <Card className="border-none shadow-2xl rounded-[4rem] overflow-hidden bg-gradient-to-br from-teal-900 to-teal-950 text-white relative">
-                <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 0l40 40-40 40L0 40z' fill='%23ffffff'/%3E%3C/svg%3E")` }} />
-                
-                <CardContent className="p-16 text-center space-y-10 relative z-10">
-                  <motion.div 
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 100, damping: 12, delay: 0.2 }}
-                    className="mx-auto w-32 h-32 bg-accent/20 rounded-full flex items-center justify-center mb-6 shadow-inner"
-                  >
-                    <Check className="text-accent w-16 h-16 stroke-[3]" />
-                  </motion.div>
-                  
-                  <div className="space-y-4">
-                    <h2 className="text-5xl font-serif tracking-tight">Success! Link Created</h2>
-                    <p className="text-xl text-teal-100/70 font-light max-w-sm mx-auto leading-relaxed">Your sacred space for conversation is ready to be shared with the world.</p>
+              <Card className="border-primary/10 shadow-2xl shadow-primary/5 bg-card/80 backdrop-blur-xl rounded-[3rem] overflow-hidden">
+                <CardHeader className="text-center p-12 space-y-4">
+                  <div className="mx-auto w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mb-4">
+                    <MapPin className="text-primary w-10 h-10" />
                   </div>
-                  
-                  <div className="bg-white/10 backdrop-blur-md rounded-[2.5rem] p-4 border border-white/10 flex items-center gap-4 group">
-                    <div className="flex-1 text-xl px-6 font-mono overflow-hidden text-ellipsis whitespace-nowrap opacity-80 select-all">
-                      {window.location.origin}/s/{shareToken}
+                  <CardTitle className="text-4xl font-serif text-primary tracking-tight">Address & Location</CardTitle>
+                  <CardDescription className="text-lg font-light text-muted-foreground">Where your roots and future lie</CardDescription>
+                </CardHeader>
+                <CardContent className="p-12 pt-0 space-y-8">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <Label className="text-lg font-medium">Country</Label>
+                      <Select value={biodataData.country} onValueChange={(value) => setBiodataData(prev => ({ ...prev, country: value }))}>
+                        <SelectTrigger className="h-14 rounded-2xl">
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Bangladesh">Bangladesh</SelectItem>
+                          <SelectItem value="Pakistan">Pakistan</SelectItem>
+                          <SelectItem value="India">India</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <Button size="icon" variant="ghost" onClick={copyLink} className="h-16 w-16 rounded-[1.5rem] hover:bg-white/10 text-accent transition-all active:scale-90">
-                      <Copy className="w-8 h-8" />
-                    </Button>
+                    <div className="space-y-4">
+                      <Label className="text-lg font-medium">Division/State</Label>
+                      <Input
+                        placeholder="e.g., Dhaka, Punjab, Maharashtra"
+                        value={biodataData.division}
+                        onChange={(e) => setBiodataData(prev => ({ ...prev, division: e.target.value }))}
+                        className="h-14 rounded-2xl"
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      <Label className="text-lg font-medium">District/City</Label>
+                      <Input
+                        placeholder="e.g., Dhaka, Lahore, Mumbai"
+                        value={biodataData.district}
+                        onChange={(e) => setBiodataData(prev => ({ ...prev, district: e.target.value }))}
+                        className="h-14 rounded-2xl"
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      <Label className="text-lg font-medium">Nationality</Label>
+                      <Input
+                        placeholder="e.g., Bangladeshi, Pakistani"
+                        value={biodataData.nationality}
+                        onChange={(e) => setBiodataData(prev => ({ ...prev, nationality: e.target.value }))}
+                        className="h-14 rounded-2xl"
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-6 pt-6">
-                    <Button className="flex-1 h-20 text-xl rounded-3xl bg-accent text-accent-foreground hover:bg-accent/90 shadow-2xl shadow-accent/20 font-bold group" onClick={() => window.open(`/s/${shareToken}`, '_blank')}>
-                      <Share2 className="mr-3 w-6 h-6 group-hover:scale-110 transition-transform" /> Preview Answer Page
+                  <div className="flex gap-4 pt-6">
+                    <Button variant="outline" className="flex-1 h-14 rounded-2xl" onClick={() => setBiodataStep(1)}>
+                      <ArrowLeft className="mr-2 w-4 h-4" />
+                      Back to Profile
                     </Button>
-                    <Button variant="ghost" className="flex-1 h-20 text-xl rounded-3xl text-white/60 hover:text-white hover:bg-white/5" onClick={() => { setStep(1); setShareToken(null); setTitle(""); setDescription(""); setQuestions([{ id: crypto.randomUUID(), prompt: "", type: "TEXT", options: [], required: true }]); }}>
-                      Create Another
+                    <Button className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90" onClick={() => setBiodataStep(3)}>
+                      Continue to Education
+                      <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
           )}
-        </AnimatePresence>
-      </div>
 
-      <div className="mt-12 text-muted-foreground/40 font-serif italic text-sm">
-        "Honesty is the shortest way to connection"
+          {demoType === 'biodata' && biodataStep === 3 && (
+            <motion.div
+              key="biodata-step3"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <Card className="border-primary/10 shadow-2xl shadow-primary/5 bg-card/80 backdrop-blur-xl rounded-[3rem] overflow-hidden">
+                <CardHeader className="text-center p-12 space-y-4">
+                  <div className="mx-auto w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mb-4">
+                    <BookOpen className="text-primary w-10 h-10" />
+                  </div>
+                  <CardTitle className="text-4xl font-serif text-primary tracking-tight">Education & Career</CardTitle>
+                  <CardDescription className="text-lg font-light text-muted-foreground">Your foundation for the future</CardDescription>
+                </CardHeader>
+                <CardContent className="p-12 pt-0 space-y-8">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <Label className="text-lg font-medium">Education Level</Label>
+                      <Select value={biodataData.education} onValueChange={(value) => setBiodataData(prev => ({ ...prev, education: value }))}>
+                        <SelectTrigger className="h-14 rounded-2xl">
+                          <SelectValue placeholder="Select education" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Bachelors">Bachelor's Degree</SelectItem>
+                          <SelectItem value="Masters">Master's Degree</SelectItem>
+                          <SelectItem value="PhD">PhD</SelectItem>
+                          <SelectItem value="Diploma">Diploma</SelectItem>
+                          <SelectItem value="High School">High School</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-4">
+                      <Label className="text-lg font-medium">Occupation</Label>
+                      <Input
+                        placeholder="e.g., Software Engineer, Teacher, Doctor"
+                        value={biodataData.occupation}
+                        onChange={(e) => setBiodataData(prev => ({ ...prev, occupation: e.target.value }))}
+                        className="h-14 rounded-2xl"
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      <Label className="text-lg font-medium">Monthly Income</Label>
+                      <Select value={biodataData.monthlyIncome} onValueChange={(value) => setBiodataData(prev => ({ ...prev, monthlyIncome: value }))}>
+                        <SelectTrigger className="h-14 rounded-2xl">
+                          <SelectValue placeholder="Select income range" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Under 25k">Under 25,000</SelectItem>
+                          <SelectItem value="25k-50k">25,000 - 50,000</SelectItem>
+                          <SelectItem value="50k-100k">50,000 - 100,000</SelectItem>
+                          <SelectItem value="Above 100k">Above 100,000</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-4">
+                      <Label className="text-lg font-medium">Marriage Timeline</Label>
+                      <Select value={biodataData.marriageTimeline} onValueChange={(value) => setBiodataData(prev => ({ ...prev, marriageTimeline: value }))}>
+                        <SelectTrigger className="h-14 rounded-2xl">
+                          <SelectValue placeholder="Select timeline" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Immediately">Immediately</SelectItem>
+                          <SelectItem value="3-6 months">3-6 months</SelectItem>
+                          <SelectItem value="6-12 months">6-12 months</SelectItem>
+                          <SelectItem value="1-2 years">1-2 years</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-lg font-medium">Desired Qualities in Partner</Label>
+                    <Input
+                      placeholder="e.g., Religious, family-oriented, honest, educated"
+                      value={biodataData.desiredQualities}
+                      onChange={(e) => setBiodataData(prev => ({ ...prev, desiredQualities: e.target.value }))}
+                      className="h-14 rounded-2xl"
+                    />
+                  </div>
+
+                  <div className="flex gap-4 pt-6">
+                    <Button variant="outline" className="flex-1 h-14 rounded-2xl" onClick={() => setBiodataStep(2)}>
+                      <ArrowLeft className="mr-2 w-4 h-4" />
+                      Back to Address
+                    </Button>
+                    <Button className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90" onClick={handleBiodataComplete}>
+                      Complete Biodata Demo
+                      <Check className="ml-2 w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Biodata Completion Screen */}
+          {step === 99 && demoType === 'biodata' && (
+            <motion.div
+              key="biodata-complete"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="max-w-4xl mx-auto text-center space-y-8">
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 100, damping: 12, delay: 0.2 }}
+                  className="mx-auto w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center shadow-inner"
+                >
+                  <Heart className="text-primary w-12 h-12 stroke-[3]" />
+                </motion.div>
+
+                <div className="space-y-4">
+                  <h2 className="text-4xl font-serif tracking-tight text-primary">Biodata Demo Complete!</h2>
+                  <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">You've experienced the Islamic marriage biodata creation process. Ready to create your real profile?</p>
+                </div>
+
+                <div className="bg-muted/30 rounded-2xl p-6 border border-primary/10 max-w-md mx-auto">
+                  <h3 className="text-lg font-semibold mb-4">Demo Summary</h3>
+                  <div className="space-y-3 text-sm text-left">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Name:</span>
+                      <span className="font-medium">{biodataData.fullName || "Demo User"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Type:</span>
+                      <span className="font-medium">{biodataData.biodataType || "Not specified"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Education:</span>
+                      <span className="font-medium">{biodataData.education || "Not specified"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Timeline:</span>
+                      <span className="font-medium">{biodataData.marriageTimeline || "Not specified"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                  <Button className="flex-1 h-16 text-lg rounded-xl bg-primary hover:bg-primary/90 shadow-lg" onClick={() => window.open('/biodata/create', '_blank')}>
+                    <FileText className="mr-2 w-5 h-5" />
+                    Create Real Biodata
+                  </Button>
+                  <Button variant="outline" className="flex-1 h-16 text-lg rounded-xl" onClick={() => { setDemoType(null); setStep(0); setBiodataStep(1); setBiodataData({ fullName: "", biodataType: "", maritalStatus: "", birthMonth: "", birthYear: "", height: "", nationality: "Bangladeshi", country: "", division: "", district: "", education: "", occupation: "", monthlyIncome: "", marriageTimeline: "", desiredQualities: "" }); }}>
+                    Try Another Demo
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Question Set Demo - Matching Real CreateSet Page */}
+          {demoType === 'questions' && step === 1 && (
+            <motion.div
+              key="questions-demo"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <div className="max-w-4xl mx-auto">
+                {/* Header - Matching real page */}
+                <div className="text-center mb-8">
+                  <h1 className="text-3xl font-bold font-serif mb-2 text-primary">
+                    Create Question Set (Demo)
+                  </h1>
+                  <p className="text-muted-foreground">Design questions that matter.</p>
+                </div>
+
+                {/* Form Content - Matching CreateSetForm layout */}
+                <div className="space-y-6">
+                  {/* Basic Info */}
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-serif text-primary">Basic Information</h3>
+                    <p className="text-muted-foreground">Give your question set a clear purpose</p>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="demo-title">Set Title</Label>
+                        <Input
+                          id="demo-title"
+                          placeholder="e.g., Marriage Compatibility, Family Legacy"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="demo-desc">Description <span className="text-muted-foreground">(Optional)</span></Label>
+                        <Input
+                          id="demo-desc"
+                          placeholder="Briefly set the mood for your responder"
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="demo-attestation"
+                          checked={requireAttestation}
+                          onCheckedChange={(checked) => setRequireAttestation(!!checked)}
+                        />
+                        <Label htmlFor="demo-attestation">Require Islamic Attestation</Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Questions */}
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-serif text-primary">Questions</h3>
+                    <p className="text-muted-foreground">Customize your questions and settings</p>
+
+                    <div className="space-y-6">
+                      {questions.map((q, index) => (
+                        <div key={q.id} className="border rounded-lg p-6 space-y-4">
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-medium text-lg">Question {index + 1}</h4>
+                            {questions.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeQuestion(q.id)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>Question Prompt</Label>
+                            <Input
+                              placeholder="Type your question prompt here..."
+                              value={q.prompt}
+                              onChange={(e) => updateQuestion(q.id, { prompt: e.target.value })}
+                            />
+                          </div>
+
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Response Type</Label>
+                              <Select value={q.type} onValueChange={(value) => updateQuestion(q.id, { type: value as QuestionType })}>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="TEXT">Text Response</SelectItem>
+                                  <SelectItem value="CHOICE">Multiple Choice</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="flex items-center space-x-2 pt-8">
+                              <Checkbox
+                                id={`required-${q.id}`}
+                                checked={q.required}
+                                onCheckedChange={(checked) => updateQuestion(q.id, { required: !!checked })}
+                              />
+                              <Label htmlFor={`required-${q.id}`}>Required Question</Label>
+                            </div>
+                          </div>
+
+                          {q.type === "CHOICE" && (
+                            <div className="space-y-2">
+                              <Label>Answer Options (comma-separated)</Label>
+                              <Input
+                                placeholder="Option A, Option B, Option C"
+                                onChange={(e) => updateQuestion(q.id, { options: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+
+                      <Button variant="outline" className="w-full" onClick={addQuestion}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Another Question
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-4 pt-6">
+                    <Button variant="outline" className="flex-1" onClick={() => { setDemoType(null); setStep(0); }}>
+                      <ArrowLeft className="mr-2 w-4 h-4" />
+                      Back to Choice
+                    </Button>
+                    <Button className="flex-1 bg-amber-600 hover:bg-amber-700" onClick={handleCreate}>
+                      Create Demo Set
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+
+          {step === 3 && (
+            <motion.div
+              key="questions-complete"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="max-w-4xl mx-auto text-center space-y-8">
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 100, damping: 12, delay: 0.2 }}
+                  className="mx-auto w-24 h-24 bg-amber-500/20 rounded-full flex items-center justify-center shadow-inner"
+                >
+                  <Check className="text-amber-600 w-12 h-12 stroke-[3]" />
+                </motion.div>
+
+                <div className="space-y-4">
+                  <h2 className="text-4xl font-serif tracking-tight text-primary">Question Set Created!</h2>
+                  <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">Your question set is ready to share. Preview it and see how others will experience it.</p>
+                </div>
+
+                <div className="bg-muted/30 rounded-2xl p-6 border border-amber-500/10 max-w-md mx-auto">
+                  <h3 className="text-lg font-semibold mb-4">Share Link</h3>
+                  <div className="bg-white rounded-xl p-4 border flex items-center gap-3">
+                    <div className="flex-1 text-sm font-mono overflow-hidden text-ellipsis whitespace-nowrap">
+                      {window.location.origin}/s/{shareToken}
+                    </div>
+                    <Button size="sm" variant="ghost" onClick={copyLink} className="shrink-0">
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                  <Button className="flex-1 h-16 text-lg rounded-xl bg-amber-600 hover:bg-amber-700 shadow-lg" onClick={() => window.open(`/s/${shareToken}`, '_blank')}>
+                    <Share2 className="mr-2 w-5 h-5" />
+                    Preview Question Set
+                  </Button>
+                  <Button variant="outline" className="flex-1 h-16 text-lg rounded-xl" onClick={() => { setDemoType(null); setStep(0); setShareToken(null); setTitle(""); setDescription(""); setQuestions([{ id: crypto.randomUUID(), prompt: "", type: "TEXT", options: [], required: true }]); }}>
+                    Try Another Demo
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        </div>
       </div>
     </div>
   );

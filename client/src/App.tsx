@@ -23,6 +23,8 @@ import BiodataView from "@/pages/BiodataView";
 import BiodataWizard from "@/pages/BiodataWizard";
 import Community from "./pages/Community";
 import MarriageGuide from "./pages/MarriageGuide";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -65,6 +67,8 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/marriage-guide" component={MarriageGuide} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy" component={Privacy} />
       <Route path="/login" component={Login} />
       <Route path="/demo" component={DemoWizard} />
       <Route path="/s/:token" component={PublicResponse} />

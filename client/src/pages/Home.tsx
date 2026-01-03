@@ -28,116 +28,216 @@ export default function Home() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden py-20 lg:py-32">
-          <div className="container mx-auto px-4 text-center relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="max-w-4xl mx-auto"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm mb-8 border border-primary/20">
-                <Heart className="w-4 h-4 fill-primary text-primary" />
-                <span className="text-foreground font-serif tracking-wide">Ask your Wisdom</span>
-              </div>
+        {/* Hero Section */}
+<section className="relative overflow-hidden min-h-[calc(100vh-64px)] flex items-center">
+  {/* Background layers */}
+  <div className="absolute inset-0 -z-10">
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-amber-500/10" />
+    <div className="absolute -top-32 -left-40 h-[520px] w-[520px] rounded-full bg-primary/10 blur-3xl" />
+    <div className="absolute -bottom-40 -right-48 h-[560px] w-[560px] rounded-full bg-amber-500/10 blur-3xl" />
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(16,185,129,0.12),transparent_55%)]" />
+  </div>
 
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-primary mb-6 leading-tight font-serif">
-                Find Your Blessed Match
-              </h1>
+  <div className="container mx-auto px-4 relative z-10 py-14">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className=" mx-auto"
+    >
+      <div className="grid lg:grid-cols-2 gap-10 items-center">
+        {/* Left content */}
+        <div className="text-left">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm mb-6 border border-primary/20">
+            <Heart className="w-4 h-4 fill-primary text-primary" />
+            <span className="text-foreground font-serif tracking-wide">
+              Guiding Hearts Together
+            </span>
+          </div>
 
-              <p className="text-xl md:text-2xl text-muted-foreground mb-10 leading-relaxed font-light max-w-3xl mx-auto">
-                Create your biodata, ask the right questions, and grow with a supportive community—all guided by faith and values.
-              </p>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-5 leading-tight font-serif">
+            Reduce the{" "}
+            <span className="text-primary">complexity</span> of marriage—
+            <br className="hidden md:block" />
+            <span className="text-amber-700"> learn</span>,{" "}
+            <span className="text-emerald-700">connect</span>, and{" "}
+            <span className="text-primary">move forward</span>.
+          </h1>
 
-              <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-8">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-primary/10 hover:bg-white/80 transition-colors"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-primary" />
-                    </div>
-                    <h3 className="font-semibold text-foreground">Marriage Biodata</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4">8-step Islamic profile with religious markers and family details</p>
-                  <Link href="/biodata/create">
-                    <Button size="sm" className="w-full rounded-full">
-                      Create Yours
-                    </Button>
-                  </Link>
-                </motion.div>
+          <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed max-w-xl">
+            SabrSpace helps you share Islamic marriage knowledge, build a supportive community,
+            and make searching + communication easier with structured biodata and meaningful questions.
+          </p>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-amber-500/10 hover:bg-white/80 transition-colors"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                      <MessageSquare className="w-5 h-5 text-amber-700" />
-                    </div>
-                    <h3 className="font-semibold text-foreground">Question Sets</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4">Ask meaningful questions for compatibility and understanding</p>
-                  <Link href="/create">
-                    <Button size="sm" className="w-full rounded-full bg-amber-600 hover:bg-amber-700">
-                      Start Creating
-                    </Button>
-                  </Link>
-                </motion.div>
+          {/* Primary CTAs */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-6 max-w-xl">
+            <Link href="/biodata/create">
+              <Button size="lg" className="rounded-full gap-2 shadow-lg shadow-primary/20 w-full sm:w-auto">
+                Create your biodata <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-500/10 hover:bg-white/80 transition-colors"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                      <Users className="w-5 h-5 text-emerald-700" />
-                    </div>
-                    <h3 className="font-semibold text-foreground">Community</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4">Connect with fellow Muslims seeking meaningful relationships</p>
-                  <Link href="/community">
-                    <Button size="sm" className="w-full rounded-full bg-emerald-600 hover:bg-emerald-700">
-                      Join Now
-                    </Button>
-                  </Link>
-                </motion.div>
-              </div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="text-center"
+            <Link href="/community">
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-full border-primary/20 hover:bg-primary/5 w-full sm:w-auto"
               >
-                <p className="text-sm text-muted-foreground mb-4">New to SabrSpace?</p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Link href="/marriage-guide">
-                    <Button variant="outline" size="sm" className="rounded-full border-primary/20 hover:bg-primary/5">
-                      Learn About Islamic Marriage
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    </Button>
-                  </Link>
-                  <Link href="/demo">
-                    <Button variant="ghost" size="sm" className="rounded-full">
-                      Try Demo Wizard
-                    </Button>
-                  </Link>
+                Join the community
+              </Button>
+            </Link>
+
+            <Link href="/marriage-guide">
+              <Button size="lg" variant="ghost" className="rounded-full w-full sm:w-auto">
+                Read the marriage guide
+              </Button>
+            </Link>
+          </div>
+
+          {/* Trust / intent row */}
+          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/60 border border-border px-3 py-1">
+              <ShieldCheck className="w-4 h-4 text-emerald-700" />
+              Faith-first & respectful
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/60 border border-border px-3 py-1">
+              <Sparkles className="w-4 h-4 text-primary" />
+              Clear, guided steps
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/60 border border-border px-3 py-1">
+              <Users className="w-4 h-4 text-amber-700" />
+              Community wisdom
+            </span>
+          </div>
+        </div>
+
+        {/* Right content: feature cards + verse */}
+        <div className="space-y-4">
+          <div className="grid gap-4">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 }}
+              className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-primary/10 hover:bg-white/80 transition-colors"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-5 h-5 text-primary" />
                 </div>
-              </motion.div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="font-semibold text-foreground">Marriage Biodata</h3>
+                    <Badge className="rounded-full bg-primary/10 text-primary border border-primary/20">
+                      8 steps
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    A structured Islamic biodata with deen markers, family, education, and preferences—easy to share.
+                  </p>
+                  <div className="mt-4">
+                    <Link href="/biodata/create">
+                      <Button size="sm" className="rounded-full">
+                        Create yours
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.20 }}
+              className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-amber-500/10 hover:bg-white/80 transition-colors"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-5 h-5 text-amber-700" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="font-semibold text-foreground">Question Sets</h3>
+                    <Badge className="rounded-full bg-amber-500/10 text-amber-700 border border-amber-500/20">
+                      Clarity
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Ask meaningful questions that reduce confusion and help families communicate with confidence.
+                  </p>
+                  <div className="mt-4">
+                    <Link href="/create">
+                      <Button size="sm" className="rounded-full bg-amber-600 hover:bg-amber-700">
+                        Start creating
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.28 }}
+              className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-500/10 hover:bg-white/80 transition-colors"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                  <Users className="w-5 h-5 text-emerald-700" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="font-semibold text-foreground">Community</h3>
+                    <Badge className="rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/20">
+                      Support
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Share knowledge, learn from experiences, and make better decisions—together.
+                  </p>
+                  <div className="mt-4">
+                    <Link href="/community">
+                      <Button size="sm" className="rounded-full bg-emerald-600 hover:bg-emerald-700">
+                        Join now
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
 
-          {/* Decorative Gradient Blob */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl -z-10" />
-        </section>
+          {/* Quran quote (keeps Islamic vibe + fits intention) */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.36 }}
+            className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-border/50"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                <Quote className="w-5 h-5 text-amber-700" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground italic leading-relaxed">
+                  “And among His signs is that He created for you mates… and placed between you affection and mercy.”
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground font-medium">— Qur’an 30:21</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Small footer note (optional, still within hero) */}
+          <div className="text-xs text-muted-foreground px-1">
+            Tip: Use the guide + question sets before sharing biodata—clarity early reduces misunderstandings later.
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  </div>
+</section>
+
 
         {/* Marriage Section */}
         <section id="marriage" className="py-24 bg-gradient-to-br from-primary/5 via-background to-amber-500/5">
@@ -718,7 +818,22 @@ export default function Home() {
       </main>
 
       <footer className="py-8 text-center text-sm text-muted-foreground border-t border-border">
-        <p>&copy; {new Date().getFullYear()} {t("app.name")}. {t("footer.rights")}</p>
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+            <p>&copy; {new Date().getFullYear()} {t("app.name")}. {t("footer.rights")}</p>
+            <div className="flex gap-6">
+              <Link href="/terms" className="hover:text-primary transition-colors">
+                Terms of Service
+              </Link>
+              <Link href="/privacy" className="hover:text-primary transition-colors">
+                Privacy Policy
+              </Link>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground/60 max-w-2xl mx-auto">
+            Built with Islamic principles of Amanah (trust), Akhlaq (good character), and Ihsan (excellence in service).
+          </p>
+        </div>
       </footer>
     </div>
   );
