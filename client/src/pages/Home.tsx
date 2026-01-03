@@ -39,10 +39,10 @@ export default function Home() {
   </div>
 
   <div className="container mx-auto px-4 relative z-10 py-14">
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
       className=" mx-auto"
     >
       <div className="grid lg:grid-cols-2 gap-10 items-center">
@@ -53,8 +53,8 @@ export default function Home() {
             <span className="text-foreground font-serif tracking-wide">
               Guiding Hearts Together
             </span>
-          </div>
-
+              </div>
+              
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-5 leading-tight font-serif">
             Reduce the{" "}
             <span className="text-primary">complexity</span> of marriage—
@@ -62,8 +62,8 @@ export default function Home() {
             <span className="text-amber-700"> learn</span>,{" "}
             <span className="text-emerald-700">connect</span>, and{" "}
             <span className="text-primary">move forward</span>.
-          </h1>
-
+              </h1>
+              
           <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed max-w-xl">
             SabrSpace helps you share Islamic marriage knowledge, build a supportive community,
             and make searching + communication easier with structured biodata and meaningful questions.
@@ -135,11 +135,11 @@ export default function Home() {
                     A structured Islamic biodata with deen markers, family, education, and preferences—easy to share.
                   </p>
                   <div className="mt-4">
-                    <Link href="/biodata/create">
+                <Link href="/biodata/create">
                       <Button size="sm" className="rounded-full">
                         Create yours
-                      </Button>
-                    </Link>
+                  </Button>
+                </Link>
                   </div>
                 </div>
               </div>
@@ -166,11 +166,11 @@ export default function Home() {
                     Ask meaningful questions that reduce confusion and help families communicate with confidence.
                   </p>
                   <div className="mt-4">
-                    <Link href="/create">
+                <Link href="/create">
                       <Button size="sm" className="rounded-full bg-amber-600 hover:bg-amber-700">
                         Start creating
-                      </Button>
-                    </Link>
+                  </Button>
+                </Link>
                   </div>
                 </div>
               </div>
@@ -197,17 +197,17 @@ export default function Home() {
                     Share knowledge, learn from experiences, and make better decisions—together.
                   </p>
                   <div className="mt-4">
-                    <Link href="/community">
+                <Link href="/community">
                       <Button size="sm" className="rounded-full bg-emerald-600 hover:bg-emerald-700">
                         Join now
-                      </Button>
-                    </Link>
+                  </Button>
+                </Link>
                   </div>
                 </div>
               </div>
             </motion.div>
           </div>
-
+          
           {/* Quran quote (keeps Islamic vibe + fits intention) */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -640,9 +640,9 @@ export default function Home() {
         {/* Community Section */}
         <section id="community" className="py-24 bg-gradient-to-br from-emerald-500/5 via-background to-primary/5">
           <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="text-center mb-16"
             >
@@ -760,7 +760,7 @@ export default function Home() {
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
+                  viewport={{ once: true }}
                 className="space-y-6"
               >
                 <div className="bg-gradient-to-br from-emerald-500/10 to-primary/10 rounded-2xl p-8 border border-emerald-500/20">
@@ -811,7 +811,7 @@ export default function Home() {
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
+                </motion.div>
             </div>
           </div>
         </section>
@@ -820,7 +820,7 @@ export default function Home() {
       <footer className="py-8 text-center text-sm text-muted-foreground border-t border-border">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
-            <p>&copy; {new Date().getFullYear()} {t("app.name")}. {t("footer.rights")}</p>
+        <p>&copy; {new Date().getFullYear()} {t("app.name")}. {t("footer.rights")}</p>
             <div className="flex gap-6">
               <Link href="/terms" className="hover:text-primary transition-colors">
                 Terms of Service

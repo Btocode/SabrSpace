@@ -109,26 +109,24 @@ export default function Dashboard() {
       {isAnonymous && showUpgradeBanner && (
         <div className="bg-slate-50 border-b border-slate-200">
           <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 flex-1">
-                <div className="flex items-center gap-2">
-                  <UserPlus className="w-5 h-5 text-slate-600" />
-                  <div className="text-sm">
-                    <span className="text-slate-700 font-medium">Want to create a real account? </span>
-                    <button
-                      onClick={openUpgradeModal}
-                      className="text-primary hover:text-primary/80 underline font-medium"
-                    >
-                      Sign up for full access
-                    </button>
-                  </div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <UserPlus className="w-5 h-5 text-slate-600 flex-shrink-0" />
+                <div className="text-sm min-w-0">
+                  <span className="text-slate-700 font-medium">Want to create a real account? </span>
+                  <button
+                    onClick={openUpgradeModal}
+                    className="text-primary hover:text-primary/80 underline font-medium"
+                  >
+                    Sign up for full access
+                  </button>
                 </div>
               </div>
               <Button
                 onClick={dismissBanner}
                 variant="ghost"
                 size="sm"
-                className="text-slate-500 hover:text-slate-700 h-8 w-8 p-0"
+                className="text-slate-500 hover:text-slate-700 h-8 w-8 p-0 flex-shrink-0"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -137,24 +135,24 @@ export default function Dashboard() {
         </div>
       )}
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
+      <main className="container mx-auto px-4 py-4 md:py-8 space-y-6 md:space-y-8">
         {/* Hero Welcome */}
         <section className="mb-8">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-background to-amber-500/10 border border-primary/20 p-8">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-background to-amber-500/10 border border-primary/20 p-4 md:p-6 lg:p-8">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-amber-500/5" />
             <div className="relative">
-              <h1 className="text-3xl font-bold mb-4 font-serif text-foreground">{t("dashboard.welcome")}</h1>
-              <p className="text-muted-foreground mb-6 max-w-2xl">
+              <h1 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4 font-serif text-foreground">{t("dashboard.welcome")}</h1>
+              <p className="text-muted-foreground mb-4 md:mb-6 max-w-2xl text-sm md:text-base">
                 Create meaningful connections through Islamic marriage. Build your biodata, share your journey, and connect with the community.
               </p>
-              <div className="flex flex-wrap gap-3">
-                <Button className="gap-2 rounded-full" asChild>
+              <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
+                <Button className="gap-2 rounded-full w-full sm:w-auto" asChild>
                   <Link href="/biodata/create">
                     <FileText className="w-4 h-4" />
                     Create Biodata
                   </Link>
                 </Button>
-                <Button variant="outline" className="gap-2 rounded-full" asChild>
+                <Button variant="outline" className="gap-2 rounded-full w-full sm:w-auto" asChild>
                   <Link href="/community">
                     <Users className="w-4 h-4" />
                     Join Community
@@ -167,7 +165,7 @@ export default function Dashboard() {
 
         {/* Stats Row */}
         <section>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
             <Card className="glass-panel border-none rounded-2xl">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -235,9 +233,9 @@ export default function Dashboard() {
 
         {/* Sets List */}
         <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold font-serif">Your Question Sets</h2>
-            <Button className="rounded-full" asChild>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <h2 className="text-xl md:text-2xl font-bold font-serif">Your Question Sets</h2>
+            <Button className="rounded-full w-full sm:w-auto" asChild>
               <Link href="/create">
                 <Plus className="w-4 h-4 mr-2" />
                 {t("set.create")}
@@ -274,18 +272,18 @@ export default function Dashboard() {
               {sets?.map((set) => (
                 <Card key={set.id} className="overflow-hidden border-primary/20 rounded-2xl hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer group">
                   <Link href={`/sets/${set.id}`} className="block">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between gap-4">
+                    <CardContent className="p-4 md:p-6">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div className="flex-1 space-y-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+                          <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors flex-shrink-0">
                               <MessageCircle className="h-5 w-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors truncate">
+                              <h3 className="font-semibold text-base md:text-lg text-foreground group-hover:text-primary transition-colors truncate">
                                 Questions by {set.questionerName}
                               </h3>
-                              <div className="flex items-center gap-2 mt-1">
+                              <div className="flex flex-wrap items-center gap-1 md:gap-2 mt-2">
                                 {!set.isOpen && (
                                   <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">
                                     Closed
@@ -293,12 +291,12 @@ export default function Dashboard() {
                                 )}
                                 {set.requireAttestation && (
                                   <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-xs font-medium border border-amber-200">
-                                    Islamic Oath Required
+                                    Islamic Oath
                                   </span>
                                 )}
                                 {set.curatorEmail && (
                                   <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
-                                    Questioner Curator
+                                    Curator
                                   </span>
                                 )}
                                 {set.answererCuratorEmail && (
@@ -310,7 +308,7 @@ export default function Dashboard() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Eye className="w-4 h-4" />
                               <span>{set.views} views</span>
@@ -321,19 +319,20 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {/* Mobile-friendly actions - always visible on mobile, hover on desktop */}
+                        <div className="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-primary hover:text-primary hover:bg-primary/10"
+                            className="text-primary hover:text-primary hover:bg-primary/10 flex-1 md:flex-none"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               copyLink(set.token);
                             }}
                           >
-                            <Share2 className="w-4 h-4 mr-1" />
-                            Share
+                            <Share2 className="w-4 h-4 md:mr-1" />
+                            <span className="md:inline hidden">Share</span>
                           </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>

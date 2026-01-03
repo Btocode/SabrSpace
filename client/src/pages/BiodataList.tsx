@@ -174,16 +174,16 @@ export default function BiodataList() {
 
           {!isLoading ? (
             <>
-              <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h2 className="text-2xl font-semibold">Your Biodata Profiles</h2>
+                  <h2 className="text-xl md:text-2xl font-semibold">Your Biodata Profiles</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Draft, publish, and share your marriage biodata.
                   </p>
                 </div>
 
                 <Link href="/biodata/create">
-                  <Button className="gap-2 rounded-full">
+                  <Button className="gap-2 rounded-full w-full sm:w-auto">
                     <Plus className="w-4 h-4" />
                     Create biodata
                   </Button>
@@ -257,10 +257,10 @@ export default function BiodataList() {
 
               {/* Main Content */}
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                {/* Left Side - Guidelines */}
-                <div className="lg:col-span-4 space-y-4">
+                {/* Desktop Left Side - Guidelines (hidden on mobile) */}
+                <div className="hidden lg:block lg:col-span-4 space-y-4">
                   {/* Key Islamic Principles */}
-                  
+
 
               {/* Quick Tips */}
               <Card className="border-primary/20 bg-primary/5">
@@ -309,17 +309,17 @@ export default function BiodataList() {
                 <div className="lg:col-span-8 space-y-6">
                   {biodataCount === 0 ? (
                     <Card className="glass-panel border-dashed border-2 border-primary/20">
-                      <CardContent className="flex flex-col items-center justify-center py-12">
+                      <CardContent className="flex flex-col items-center justify-center py-8 md:py-12">
                         <div className="text-center space-y-4">
-                          <div className="text-4xl">📝</div>
+                          <div className="text-3xl md:text-4xl">📝</div>
                           <div className="space-y-2">
-                            <h3 className="text-lg font-semibold">No biodata yet</h3>
-                            <p className="text-muted-foreground text-sm max-w-sm">
+                            <h3 className="text-base md:text-lg font-semibold">No biodata yet</h3>
+                            <p className="text-muted-foreground text-sm max-w-sm px-4">
                               Create your first marriage biodata profile to get started on your journey
                             </p>
                           </div>
                           <Link href="/biodata/create">
-                            <Button className="gap-2 rounded-full">
+                            <Button className="gap-2 rounded-full w-full sm:w-auto">
                               <Plus className="w-4 h-4" />
                               Create Biodata
                             </Button>
@@ -450,6 +450,55 @@ export default function BiodataList() {
                       ))}
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Mobile Guidelines - Only visible on mobile/tablet */}
+              <div className="block lg:hidden mt-8 space-y-4">
+                <h3 className="text-lg font-semibold text-center mb-4">Important Guidelines</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Quick Tips */}
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" />
+                        What to Remember
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <ul className="text-xs space-y-2 text-muted-foreground">
+                        <li>• Be truthful and accurate</li>
+                        <li>• Focus on character and faith</li>
+                        <li>• Marriage is a sacred commitment</li>
+                        <li>• Seek Allah's guidance</li>
+                        <li>• Base on mutual respect</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-border bg-background/70">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        How biodata helps you match better
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        A good biodata filters for compatibility early and reduces awkward back-and-forth.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <ul className="text-xs space-y-2 text-muted-foreground">
+                        <li>• Clear essentials (age, location, education) save time for both families.</li>
+                        <li>• Specific religious practice helps align expectations.</li>
+                        <li>• Honest preferences reduce mismatches and ghosting.</li>
+                        <li>
+                          • Minimal PDF is best for first introductions; comprehensive is best after serious
+                          interest.
+                        </li>
+                      </ul>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
 

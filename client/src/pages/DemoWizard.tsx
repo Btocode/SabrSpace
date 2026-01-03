@@ -470,9 +470,9 @@ export default function DemoWizard() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-4">
+                  <div className="space-y-4">
                       <Label className="text-lg font-medium">Division/State</Label>
-                      <Input
+                      <Input 
                         placeholder="e.g., Dhaka, Punjab, Maharashtra"
                         value={biodataData.division}
                         onChange={(e) => setBiodataData(prev => ({ ...prev, division: e.target.value }))}
@@ -481,7 +481,7 @@ export default function DemoWizard() {
                     </div>
                     <div className="space-y-4">
                       <Label className="text-lg font-medium">District/City</Label>
-                      <Input
+                      <Input 
                         placeholder="e.g., Dhaka, Lahore, Mumbai"
                         value={biodataData.district}
                         onChange={(e) => setBiodataData(prev => ({ ...prev, district: e.target.value }))}
@@ -507,7 +507,7 @@ export default function DemoWizard() {
                     <Button className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90" onClick={() => setBiodataStep(3)}>
                       Continue to Education
                       <ArrowRight className="ml-2 w-4 h-4" />
-                    </Button>
+                  </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -661,7 +661,7 @@ export default function DemoWizard() {
                   </Button>
                   <Button variant="outline" className="flex-1 h-16 text-lg rounded-xl" onClick={() => { setDemoType(null); setStep(0); setBiodataStep(1); setBiodataData({ fullName: "", biodataType: "", maritalStatus: "", birthMonth: "", birthYear: "", height: "", nationality: "Bangladeshi", country: "", division: "", district: "", education: "", occupation: "", monthlyIncome: "", marriageTimeline: "", desiredQualities: "" }); }}>
                     Try Another Demo
-                  </Button>
+                </Button>
                 </div>
               </div>
             </motion.div>
@@ -669,12 +669,12 @@ export default function DemoWizard() {
 
           {/* Question Set Demo - Matching Real CreateSet Page */}
           {demoType === 'questions' && step === 1 && (
-            <motion.div
+                  <motion.div
               key="questions-demo"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-            >
+                  >
               <div className="max-w-4xl mx-auto">
                 {/* Header - Matching real page */}
                 <div className="text-center mb-8">
@@ -741,16 +741,16 @@ export default function DemoWizard() {
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             )}
-                          </div>
+                            </div>
 
                           <div className="space-y-2">
                             <Label>Question Prompt</Label>
-                            <Input
-                              placeholder="Type your question prompt here..."
-                              value={q.prompt}
-                              onChange={(e) => updateQuestion(q.id, { prompt: e.target.value })}
+                            <Input 
+                              placeholder="Type your question prompt here..." 
+                              value={q.prompt} 
+                              onChange={(e) => updateQuestion(q.id, { prompt: e.target.value })} 
                             />
-                          </div>
+                        </div>
 
                           <div className="grid md:grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -769,19 +769,19 @@ export default function DemoWizard() {
                             <div className="flex items-center space-x-2 pt-8">
                               <Checkbox
                                 id={`required-${q.id}`}
-                                checked={q.required}
+                              checked={q.required} 
                                 onCheckedChange={(checked) => updateQuestion(q.id, { required: !!checked })}
-                              />
+                            />
                               <Label htmlFor={`required-${q.id}`}>Required Question</Label>
-                            </div>
                           </div>
+                        </div>
 
-                          {q.type === "CHOICE" && (
+                        {q.type === "CHOICE" && (
                             <div className="space-y-2">
                               <Label>Answer Options (comma-separated)</Label>
-                              <Input
+                            <Input 
                                 placeholder="Option A, Option B, Option C"
-                                onChange={(e) => updateQuestion(q.id, { options: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
+                              onChange={(e) => updateQuestion(q.id, { options: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })} 
                               />
                             </div>
                           )}
@@ -793,18 +793,18 @@ export default function DemoWizard() {
                         Add Another Question
                       </Button>
                     </div>
-                  </div>
+              </div>
 
                   {/* Action Buttons */}
                   <div className="flex gap-4 pt-6">
                     <Button variant="outline" className="flex-1" onClick={() => { setDemoType(null); setStep(0); }}>
                       <ArrowLeft className="mr-2 w-4 h-4" />
                       Back to Choice
-                    </Button>
+                </Button>
                     <Button className="flex-1 bg-amber-600 hover:bg-amber-700" onClick={handleCreate}>
                       Create Demo Set
                       <ArrowRight className="ml-2 w-4 h-4" />
-                    </Button>
+                </Button>
                   </div>
                 </div>
               </div>
@@ -819,20 +819,20 @@ export default function DemoWizard() {
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="max-w-4xl mx-auto text-center space-y-8">
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 100, damping: 12, delay: 0.2 }}
+                  <motion.div 
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 100, damping: 12, delay: 0.2 }}
                   className="mx-auto w-24 h-24 bg-amber-500/20 rounded-full flex items-center justify-center shadow-inner"
-                >
+                  >
                   <Check className="text-amber-600 w-12 h-12 stroke-[3]" />
-                </motion.div>
-
-                <div className="space-y-4">
+                  </motion.div>
+                  
+                  <div className="space-y-4">
                   <h2 className="text-4xl font-serif tracking-tight text-primary">Question Set Created!</h2>
                   <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">Your question set is ready to share. Preview it and see how others will experience it.</p>
-                </div>
-
+                  </div>
+                  
                 <div className="bg-muted/30 rounded-2xl p-6 border border-amber-500/10 max-w-md mx-auto">
                   <h3 className="text-lg font-semibold mb-4">Share Link</h3>
                   <div className="bg-white rounded-xl p-4 border flex items-center gap-3">
@@ -843,22 +843,22 @@ export default function DemoWizard() {
                       <Copy className="w-4 h-4" />
                     </Button>
                   </div>
-                </div>
+                  </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 pt-6">
                   <Button className="flex-1 h-16 text-lg rounded-xl bg-amber-600 hover:bg-amber-700 shadow-lg" onClick={() => window.open(`/s/${shareToken}`, '_blank')}>
                     <Share2 className="mr-2 w-5 h-5" />
                     Preview Question Set
-                  </Button>
+                    </Button>
                   <Button variant="outline" className="flex-1 h-16 text-lg rounded-xl" onClick={() => { setDemoType(null); setStep(0); setShareToken(null); setTitle(""); setDescription(""); setQuestions([{ id: crypto.randomUUID(), prompt: "", type: "TEXT", options: [], required: true }]); }}>
                     Try Another Demo
-                  </Button>
-                </div>
+                    </Button>
+                  </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-        </div>
+      </div>
       </div>
     </div>
   );
