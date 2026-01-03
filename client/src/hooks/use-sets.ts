@@ -107,3 +107,33 @@ export function useDeleteSet() {
     },
   });
 }
+
+// Add answerer curator
+export function useAddAnswererCurator() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ token, email }: { token: string; email: string }) => {
+      const url = buildUrl(api.sets.addAnswererCurator.path, { token });
+      console.log("Frontend: Calling curator API:", url, { email });
+      const res = await fetch(url, {
+        method: api.sets.addAnswererCurator.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      console.log("Frontend: Response status:", res.status, res.ok);
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.log("Frontend: Error response:", errorText);
+        throw new Error(errorText || "Failed to add curator");
+      }
+      const responseData = await res.json();
+      console.log("Frontend: Success response:", responseData);
+      return api.sets.addAnswererCurator.responses[200].parse(responseData);
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate the specific public set query to refresh curator information
+      queryClient.invalidateQueries({ queryKey: [api.public.getSet.path, variables.token] });
+    },
+  });
+}

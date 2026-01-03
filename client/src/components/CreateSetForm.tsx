@@ -17,10 +17,10 @@ import { Plus, Trash2, ArrowRight, Save, GripVertical, AlertCircle, Mail, CheckC
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
 
-// Combined schema for the form - temporarily simplified for debugging
+// Combined schema for the form - updated for curator system
 const formSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
+  questionerName: z.string().min(1, "Questioner name is required"),
+  curatorEmail: z.union([z.string().email(), z.literal("")]).optional(),
   isOpen: z.boolean(),
   requireAttestation: z.boolean(),
   allowAnonymous: z.boolean(),
@@ -28,11 +28,11 @@ const formSchema = z.object({
   defaultLocale: z.string(),
   questions: z.array(z.object({
     tempId: z.string().optional(),
-    type: z.string(),
+    type: z.enum(['TEXT', 'CHOICE']),
     prompt: z.string().min(1, "Question prompt is required"),
     required: z.boolean(),
     order: z.number(),
-    options: z.any().optional()
+    options: z.array(z.string()).optional()
   })).min(1, "At least one question is required")
 });
 
@@ -86,8 +86,8 @@ export function CreateSetForm() {
     resolver: zodResolver(formSchema),
     mode: "onChange", // Validate on change to show errors immediately
     defaultValues: {
-      title: "",
-      description: "",
+      questionerName: "",
+      curatorEmail: "",
       isOpen: true,
       requireAttestation: false,
       allowAnonymous: false,
@@ -111,7 +111,7 @@ export function CreateSetForm() {
     console.log("User authenticated:", isAuthenticated, "User:", user);
 
     // Check if user is anonymous
-    if (!isAuthenticated || user?.firstName === "Anonymous") {
+    if (!isAuthenticated || user?.email === "Anonymous") {
       console.log("User is anonymous, showing prompt");
       setShowAnonymousPrompt(true);
       return;
@@ -119,11 +119,14 @@ export function CreateSetForm() {
 
     console.log("User is authenticated, proceeding with save");
 
-    // Ensure order is correct
+    // Ensure order is correct and remove form-specific fields
     const formattedData = {
       ...data,
       questions: data.questions.map((q, idx) => ({
-        ...q,
+        type: q.type,
+        prompt: q.prompt,
+        options: q.options,
+        required: q.required,
         order: idx
       }))
     };
@@ -150,7 +153,10 @@ export function CreateSetForm() {
     const formattedData = {
       ...data,
       questions: data.questions.map((q, idx) => ({
-        ...q,
+        type: q.type,
+        prompt: q.prompt,
+        options: q.options,
+        required: q.required,
         order: idx
       }))
     };
@@ -347,26 +353,33 @@ export function CreateSetForm() {
       {/* Basic Info */}
       <div className="space-y-4">
         <div>
-          <Label htmlFor="title" className="text-base font-semibold text-foreground/80">{t("set.title")}</Label>
-          <Input 
-            id="title" 
-            {...form.register("title")} 
-            className="mt-1 text-lg font-medium" 
-            placeholder="e.g. Weekly Reflections"
+          <Label htmlFor="questionerName" className="text-base font-semibold text-foreground/80">Questioner Name *</Label>
+          <Input
+            id="questionerName"
+            {...form.register("questionerName")}
+            className="mt-1 text-lg font-medium"
+            placeholder="Enter your full name"
           />
-          {form.formState.errors.title && (
-            <p className="text-destructive text-sm mt-1">{form.formState.errors.title.message}</p>
+          {form.formState.errors.questionerName && (
+            <p className="text-destructive text-sm mt-1">{form.formState.errors.questionerName.message}</p>
           )}
         </div>
 
         <div>
-          <Label htmlFor="description" className="text-base font-semibold text-foreground/80">{t("set.desc")}</Label>
-          <Textarea 
-            id="description" 
-            {...form.register("description")} 
-            className="mt-1 resize-none h-24" 
-            placeholder="Explain the purpose of these questions..."
+          <Label htmlFor="curatorEmail" className="text-base font-semibold text-foreground/80">Curator Email (Optional)</Label>
+          <Input
+            id="curatorEmail"
+            type="email"
+            {...form.register("curatorEmail")}
+            className="mt-1"
+            placeholder="trusted.person@email.com"
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            Add someone who can view responses and verify this question set
+          </p>
+          {form.formState.errors.curatorEmail && (
+            <p className="text-destructive text-sm mt-1">{form.formState.errors.curatorEmail.message}</p>
+          )}
         </div>
       </div>
 
@@ -485,43 +498,7 @@ export function CreateSetForm() {
             type="submit"
             size="lg"
             className="shadow-lg shadow-primary/20"
-            disabled={createSet.isPending}
-            onClick={(e) => {
-              console.log("=== SAVE BUTTON CLICKED ===");
-              const values = form.getValues();
-              const errors = form.formState.errors;
-              const isValid = form.formState.isValid;
-
-              console.log("Form values:", values);
-              console.log("Form errors:", errors);
-              console.log("Form is valid:", isValid);
-              console.log("Title value:", `"${values.title}"`, "Length:", values.title?.length);
-              console.log("Questions:", values.questions?.map((q, i) => ({
-                index: i,
-                prompt: `"${q.prompt}"`,
-                promptLength: q.prompt?.length,
-                type: q.type
-              })));
-
-              // Manual validation check
-              const titleValid = values.title && values.title.trim().length > 0;
-              const questionsValid = values.questions && values.questions.length > 0 &&
-                values.questions.every(q => q.prompt && q.prompt.trim().length > 0);
-
-              console.log("Manual validation - Title valid:", titleValid, "Questions valid:", questionsValid);
-
-              if (!titleValid || !questionsValid) {
-                console.log("Manual validation failed, preventing submission");
-                e.preventDefault();
-                errorToast(
-                  "Validation Failed",
-                  `Please fill in all required fields:
-• Title: ${titleValid ? '✓' : '✗'}
-• Questions: ${questionsValid ? '✓' : '✗'}`
-                );
-                return;
-              }
-            }}
+            disabled={createSet.isPending || !form.formState.isValid}
           >
             {createSet.isPending ? "Creating..." : (
               <>

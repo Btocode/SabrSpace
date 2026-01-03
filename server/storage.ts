@@ -17,6 +17,7 @@ export interface IStorage {
   getQuestionSetByToken(token: string): Promise<QuestionSetWithQuestions | undefined>;
   createQuestionSet(userId: string, data: CreateSetRequest): Promise<QuestionSetWithQuestions>;
   updateQuestionSet(id: number, userId: string, data: UpdateSetRequest): Promise<QuestionSetWithQuestions | undefined>;
+  updateQuestionSetAnswererCurator(id: number, email: string): Promise<void>;
   deleteQuestionSet(id: number, userId: string): Promise<void>;
   listQuestionSets(userId: string): Promise<QuestionSet[]>;
   regenerateToken(id: number, userId: string): Promise<string>;
@@ -93,8 +94,8 @@ export class DatabaseStorage implements IStorage {
     return await db.transaction(async (tx) => {
       const [newSet] = await tx.insert(questionSets).values({
         userId,
-        title: data.title,
-        description: data.description,
+        questionerName: data.questionerName,
+        curatorEmail: data.curatorEmail,
         token,
         isOpen: data.isOpen,
         requireAttestation: data.requireAttestation,
@@ -179,6 +180,12 @@ export class DatabaseStorage implements IStorage {
     const newToken = randomBytes(16).toString('base64url');
     await db.update(questionSets).set({ token: newToken }).where(eq(questionSets.id, id));
     return newToken;
+  }
+
+  async updateQuestionSetAnswererCurator(id: number, email: string): Promise<void> {
+    await db.update(questionSets)
+      .set({ answererCuratorEmail: email, updatedAt: new Date() })
+      .where(eq(questionSets.id, id));
   }
 
   async submitResponse(token: string, data: SubmitResponseRequest, userId?: string): Promise<Response> {

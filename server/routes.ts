@@ -43,6 +43,44 @@ export async function registerRoutes(
     res.json(set);
   });
 
+  // Add answerer curator route
+  console.log("Registering add curator route:", api.sets.addAnswererCurator.path);
+  app.post(api.sets.addAnswererCurator.path, async (req, res) => {
+    console.log("🎯 Add curator route HIT:", req.params, req.body);
+    try {
+      const { token } = req.params;
+      const { email } = req.body;
+
+      console.log("Token:", token, "Email:", email);
+
+      // Validate the input
+      const validatedData = api.sets.addAnswererCurator.request.parse({ email });
+      console.log("Validated data:", validatedData);
+
+      // Find the question set by token
+      const set = await storage.getQuestionSetByToken(token);
+      console.log("Found set:", set?.id);
+      if (!set) {
+        return res.status(404).json({ message: "Question set not found" });
+      }
+
+      // Update the answerer curator email
+      await storage.updateQuestionSetAnswererCurator(set.id, validatedData.email);
+      console.log("Updated curator for set:", set.id);
+
+      res.status(200).json({
+        message: `Curator access granted to ${validatedData.email}. They will be notified.`
+      });
+    } catch (err) {
+      console.error("Error in add curator route:", err);
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: err.errors });
+      }
+      console.error("Error adding answerer curator:", err);
+      res.status(500).json({ message: "Internal Error" });
+    }
+  });
+
   app.post(api.public.submitResponse.path, optionalAuthenticateToken, async (req, res) => {
     try {
       const token = req.params.token;
@@ -182,10 +220,24 @@ export async function registerRoutes(
   app.post(api.sets.create.path, authenticateToken, async (req, res) => {
     try {
       const userId = getUserId(req);
-      const input = req.body; // TODO: Add proper validation
-      const set = await storage.createQuestionSet(userId, input);
+      const input = req.body;
+
+      // Validate the input
+      const validatedData = api.sets.create.request.parse(input);
+
+      // Transform empty string curatorEmail to null
+      const transformedData = {
+        ...validatedData,
+        curatorEmail: validatedData.curatorEmail === "" ? null : validatedData.curatorEmail,
+      };
+
+      const set = await storage.createQuestionSet(userId, transformedData);
       res.status(201).json(set);
     } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: err.errors });
+      }
+      console.error("Error creating question set:", err);
       res.status(500).json({ message: "Internal Error" });
     }
   });
@@ -610,8 +662,8 @@ export async function registerRoutes(
 
     // Create Matrimony Starter Pack
     await storage.createQuestionSet(demoUserId, {
-      title: "Matrimony Starter Pack",
-      description: "A respectful set of questions for potential spouses.",
+      questionerName: "Islamic Marriage Guidance Team",
+      curatorEmail: null,
       defaultLocale: "en",
       isOpen: true,
       requireAttestation: true,

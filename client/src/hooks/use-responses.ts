@@ -11,7 +11,8 @@ export function usePublicSet(token: string) {
       const url = buildUrl(api.public.getSet.path, { token });
       const res = await fetch(url); // No credentials for public
       if (!res.ok) throw new Error("Set not found");
-      return api.public.getSet.responses[200].parse(await res.json());
+      const data = await res.json();
+      return api.public.getSet.responses[200].parse(data);
     },
     enabled: !!token,
     retry: false,

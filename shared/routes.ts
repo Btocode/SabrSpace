@@ -33,7 +33,31 @@ export const api = {
       method: 'GET' as const,
       path: '/api/public/sets/:token',
       responses: {
-        200: z.custom<any>(), // QuestionSetWithQuestions
+        200: z.object({
+          id: z.number(),
+          userId: z.string(),
+          questionerName: z.string(),
+          curatorEmail: z.string().nullable(),
+          answererCuratorEmail: z.string().nullable().optional(),
+          token: z.string(),
+          isOpen: z.boolean(),
+          requireAttestation: z.boolean(),
+          allowAnonymous: z.boolean(),
+          allowMultipleSubmissions: z.boolean(),
+          defaultLocale: z.string(),
+          views: z.number(),
+          createdAt: z.string(),
+          updatedAt: z.string(),
+          questions: z.array(z.object({
+            id: z.number(),
+            setId: z.number(),
+            order: z.number(),
+            type: z.enum(['TEXT', 'CHOICE']),
+            prompt: z.string(),
+            options: z.array(z.string()).nullable(),
+            required: z.boolean(),
+          })),
+        }),
         404: errorSchemas.notFound,
       },
     },
@@ -59,6 +83,22 @@ export const api = {
     create: {
       method: 'POST' as const,
       path: '/api/sets',
+      request: z.object({
+        questionerName: z.string().min(1, "Questioner name is required"),
+        curatorEmail: z.union([z.string().email(), z.literal("")]).optional(),
+        isOpen: z.boolean().default(true),
+        requireAttestation: z.boolean().default(false),
+        allowAnonymous: z.boolean().default(false),
+        allowMultipleSubmissions: z.boolean().default(false),
+        defaultLocale: z.enum(['en', 'bn']).default('en'),
+        questions: z.array(z.object({
+          order: z.number(),
+          type: z.enum(['TEXT', 'CHOICE']),
+          prompt: z.string().min(1, "Question prompt is required"),
+          options: z.array(z.string()).optional(),
+          required: z.boolean().default(true),
+        })),
+      }),
       responses: {
         201: z.custom<any>(), // QuestionSetWithQuestions
         400: errorSchemas.validation,
@@ -98,6 +138,18 @@ export const api = {
       responses: {
         200: z.object({ token: z.string() }),
         403: errorSchemas.unauthorized,
+      },
+    },
+    addAnswererCurator: {
+      method: 'POST' as const,
+      path: '/api/public/sets/:token/add-curator',
+      request: z.object({
+        email: z.string().email("Please enter a valid email address"),
+      }),
+      responses: {
+        200: z.object({ message: z.string() }),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
       },
     }
   },

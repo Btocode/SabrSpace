@@ -1,5 +1,6 @@
 import { useRoute } from "wouter";
 import { usePublicSet, useSubmitResponse } from "@/hooks/use-responses";
+import { useAddAnswererCurator } from "@/hooks/use-sets";
 import { useLanguage } from "@/lib/i18n";
 import { useToast } from "@/components/ui/toast-custom";
 import { Bismillah } from "@/components/Bismillah";
@@ -9,10 +10,31 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, CheckCircle2, Heart, Languages, Shield, MessageSquare, Crown, Sparkles, BookOpen, Eye, User, UserPlus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Loader2,
+  CheckCircle2,
+  Heart,
+  Languages,
+  Shield,
+  MessageSquare,
+  Crown,
+  Sparkles,
+  BookOpen,
+  Eye,
+  User,
+  UserPlus,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function PublicResponse() {
@@ -20,16 +42,58 @@ export default function PublicResponse() {
   const token = params?.token || "";
   const { data: set, isLoading, error } = usePublicSet(token);
   const submitResponse = useSubmitResponse();
+  const addCurator = useAddAnswererCurator();
   const { addToast } = useToast();
   const { t, locale, setLocale } = useLanguage();
   const [success, setSuccess] = useState(false);
   const [curatorDialogOpen, setCuratorDialogOpen] = useState(false);
   const [curatorEmail, setCuratorEmail] = useState("");
+  const curatorSuccessHandled = useRef(false);
 
-  const { register, handleSubmit, formState: { errors, isValid }, watch } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+    watch,
+  } = useForm();
 
   // Watch attestation for validation if required
   const attestationChecked = watch("attestation");
+
+  // Handle curator addition success/error
+  useEffect(() => {
+    if (addCurator.isSuccess && addCurator.data && !curatorSuccessHandled.current) {
+      curatorSuccessHandled.current = true;
+      addToast({
+        type: "success",
+        title: "Curator Added Successfully",
+        description: addCurator.data.message,
+        duration: 4000,
+      });
+      setCuratorEmail("");
+      setCuratorDialogOpen(false);
+      // The query invalidation in the hook should refresh the data
+    }
+  }, [addCurator.isSuccess, addCurator.data, addToast]);
+
+  useEffect(() => {
+    if (addCurator.isError && addCurator.error) {
+      addToast({
+        type: "error",
+        title: "Failed to Add Curator",
+        description:
+          (addCurator.error as Error).message || "Please try again later.",
+        duration: 5000,
+      });
+    }
+  }, [addCurator.isError, addCurator.error, addToast]);
+
+  // Reset the success handler when starting a new mutation
+  useEffect(() => {
+    if (addCurator.isPending) {
+      curatorSuccessHandled.current = false;
+    }
+  }, [addCurator.isPending]);
 
   const handleAddCurator = async () => {
     if (!curatorEmail.trim()) {
@@ -42,46 +106,21 @@ export default function PublicResponse() {
       return;
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(curatorEmail)) {
-      addToast({
-        type: "error",
-        title: "Invalid email",
-        description: "Please enter a valid email address.",
-        duration: 4000,
-      });
-      return;
-    }
-
-    try {
-      // Here you would typically call an API to add the curator
-      // For now, we'll just show a success message
-      addToast({
-        type: "success",
-        title: "Curator added",
-        description: `Curator access granted to ${curatorEmail}`,
-        duration: 4000,
-      });
-      setCuratorEmail("");
-      setCuratorDialogOpen(false);
-    } catch (error) {
-      addToast({
-        type: "error",
-        title: "Failed to add curator",
-        description: "Please try again later.",
-        duration: 4000,
-      });
-    }
+    addCurator.mutate({
+      token,
+      email: curatorEmail.trim(),
+    });
   };
 
-  if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Loader2 className="w-8 h-8 animate-spin text-primary" />
-    </div>
-  );
+  if (isLoading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
 
-    if (error || !set) return (
+  if (error || !set)
+    return (
       <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">
         {t("response.notFound")}
       </div>
@@ -90,36 +129,39 @@ export default function PublicResponse() {
   const onSubmit = (data: any) => {
     const answers = set.questions.map((q: any) => ({
       questionId: q.id,
-      value: data[`question_${q.id}`]
+      value: data[`question_${q.id}`],
     }));
 
-    submitResponse.mutate({
-      token,
-      data: {
-        responderName: data.name || null,
-        attestationAcceptedAt: data.attestation ? new Date() : null,
-        localeUsed: locale,
-        answers
-      }
-    }, {
-      onSuccess: () => {
-        addToast({
-          type: "success",
-          title: "JazakAllah Khair",
-          description: t("response.success"),
-          duration: 4000
-        });
-        setSuccess(true);
+    submitResponse.mutate(
+      {
+        token,
+        data: {
+          responderName: data.name || null,
+          attestationAcceptedAt: data.attestation ? new Date() : null,
+          localeUsed: locale,
+          answers,
+        },
       },
-      onError: (error: any) => {
-        addToast({
-          type: "error",
-          title: "Submission Failed",
-          description: error.message || "Failed to submit response",
-          duration: 5000
-        });
+      {
+        onSuccess: () => {
+          addToast({
+            type: "success",
+            title: "JazakAllah Khair",
+            description: t("response.success"),
+            duration: 4000,
+          });
+          setSuccess(true);
+        },
+        onError: (error: any) => {
+          addToast({
+            type: "error",
+            title: "Submission Failed",
+            description: error.message || "Failed to submit response",
+            duration: 5000,
+          });
+        },
       }
-    });
+    );
   };
 
   if (success) {
@@ -131,8 +173,12 @@ export default function PublicResponse() {
             {/* Left Section - Islamic Greeting */}
             <div className="flex-1 bg-gradient-to-br from-primary/5 via-primary/3 to-accent/5 p-8 text-center flex flex-col justify-center">
               <div className="space-y-4">
-                <h2 className="text-4xl font-bold font-serif text-primary mb-2">جزاك الله خيراً</h2>
-                <p className="text-xl text-primary font-medium">JazakAllah Khair</p>
+                <h2 className="text-4xl font-bold font-serif text-primary mb-2">
+                  جزاك الله خيراً
+                </h2>
+                <p className="text-xl text-primary font-medium">
+                  JazakAllah Khair
+                </p>
                 <p className="text-muted-foreground leading-relaxed text-base mt-4">
                   {t("response.success")}
                 </p>
@@ -142,15 +188,15 @@ export default function PublicResponse() {
             {/* Right Section - Islamic Blessings */}
             <div className="flex-1 bg-gradient-to-br from-emerald-50 via-primary/5 to-amber-50 p-8 flex flex-col justify-center">
               <div className="space-y-4">
-
                 <p className="text-sm text-emerald-800 leading-relaxed italic text-center">
-                  "May Allah bless you with the best partner and fill your life with barakah and happiness. 🤲"
+                  "May Allah bless you with the best partner and fill your life
+                  with barakah and happiness. 🤲"
                 </p>
 
                 <p className="text-xs text-emerald-700 font-medium text-center mt-4">
-                  May your sincere responses bring you closer to finding your ideal Islamic marriage partner through divine guidance.
+                  May your sincere responses bring you closer to finding your
+                  ideal Islamic marriage partner through divine guidance.
                 </p>
-
               </div>
             </div>
           </div>
@@ -172,7 +218,7 @@ export default function PublicResponse() {
                 variant="ghost"
                 size="sm"
                 className="text-primary hover:text-primary hover:bg-primary/10 rounded-full px-4 py-1 h-auto text-xs font-medium bg-primary/20"
-                onClick={() => window.open('https://sabrspace.com', '_blank')}
+                onClick={() => window.open("https://sabrspace.com", "_blank")}
               >
                 Explore SabrSpace
               </Button>
@@ -204,11 +250,11 @@ export default function PublicResponse() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setLocale(locale === 'en' ? 'bn' : 'en')}
+          onClick={() => setLocale(locale === "en" ? "bn" : "en")}
           className="bg-white/90 backdrop-blur-sm border-emerald-200 hover:bg-emerald-50 rounded-full"
         >
           <Languages className="w-4 h-4 mr-2" />
-          {locale === 'en' ? 'বাংলا' : 'English'}
+          {locale === "en" ? "বাংলا" : "English"}
         </Button>
       </div>
 
@@ -226,9 +272,12 @@ export default function PublicResponse() {
             <div className="absolute inset-0 bg-gradient-to-r from-primary/3 to-amber-500/3" />
             <div className="relative">
               {/* Add Curator Button - Top Right */}
-              {!set.requireAttestation && (
+              {!set.requireAttestation && !set.answererCuratorEmail && (
                 <div className="absolute top-0 right-0 -mt-2 -mr-2">
-                  <Dialog open={curatorDialogOpen} onOpenChange={setCuratorDialogOpen}>
+                  <Dialog
+                    open={curatorDialogOpen}
+                    onOpenChange={setCuratorDialogOpen}
+                  >
                     <DialogTrigger asChild>
                       <Button
                         variant="outline"
@@ -243,7 +292,9 @@ export default function PublicResponse() {
                       <DialogHeader>
                         <DialogTitle>Add Question Curator</DialogTitle>
                         <DialogDescription>
-                          Add someone who can view and help manage these questions. They will receive access to review responses.
+                          Add someone who can view and help manage these
+                          questions. They will receive access to review
+                          responses.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
@@ -252,10 +303,17 @@ export default function PublicResponse() {
                           <Input
                             id="curator-email"
                             type="email"
-                            placeholder="curator@example.com"
+                            placeholder="trusted.person@email.com"
                             value={curatorEmail}
                             onChange={(e) => setCuratorEmail(e.target.value)}
+                            disabled={addCurator.isPending}
                           />
+                          {set.answererCuratorEmail && (
+                            <p className="text-xs text-muted-foreground">
+                              Current answerer curator:{" "}
+                              {set.answererCuratorEmail}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <DialogFooter>
@@ -263,15 +321,26 @@ export default function PublicResponse() {
                           type="button"
                           variant="outline"
                           onClick={() => setCuratorDialogOpen(false)}
+                          disabled={addCurator.isPending}
                         >
                           Cancel
                         </Button>
                         <Button
                           type="button"
                           onClick={handleAddCurator}
+                          disabled={
+                            addCurator.isPending || !curatorEmail.trim()
+                          }
                           className="bg-primary hover:bg-primary/90"
                         >
-                          Add Curator
+                          {addCurator.isPending ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Adding...
+                            </>
+                          ) : (
+                            "Add Curator"
+                          )}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -282,20 +351,26 @@ export default function PublicResponse() {
               {/* Header Row */}
               <div className="mb-4">
                 {/* Question Creator Info */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                   <User className="w-4 h-4 text-primary" />
-                  <span className="font-medium text-primary">Questions by: </span>
-                  <span>{set.userId ? "Family Member" : "Direct Party"}</span>
+                  <span className="font-medium text-primary">
+                    Questions by:{" "}
+                  </span>
+                  <span>
+                    {set.questionerName ||
+                      (set.userId ? "Family Member" : "Direct Party")}
+                  </span>
                 </div>
 
-                {/* Third Person Involvement Notice */}
+                {/* Communication & Curation Status */}
                 <div className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
                   <Shield className="w-4 h-4 text-emerald-600" />
                   <span className="text-sm text-emerald-800 font-medium">
-                    {set.requireAttestation ?
-                      "Third person involved - Islamic oath required for authenticity" :
-                      "Direct communication - No third person involved in this Islamic marriage inquiry"
-                    }
+                    {set.requireAttestation
+                      ? "Third person involved - Islamic oath required for authenticity"
+                      : set.answererCuratorEmail
+                        ? `${set.answererCuratorEmail} is actively curating this conversation.`
+                        : "Direct communication - No third person involved in this Islamic marriage inquiry"}
                   </span>
                 </div>
               </div>
@@ -304,15 +379,23 @@ export default function PublicResponse() {
               <div className="flex flex-wrap gap-3 text-xs">
                 <div className="inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-2 text-muted-foreground border border-border/60">
                   <MessageSquare className="w-4 h-4 text-primary" />
-                  <span className="text-primary font-medium">{set.questions.length} Questions</span>
+                  <span className="text-primary font-medium">
+                    {set.questions.length} Questions
+                  </span>
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-2 text-muted-foreground border border-border/60">
                   <Shield className="w-4 h-4 text-primary" />
-                  <span className="text-primary font-medium">{set.requireAttestation ? 'With Islamic Oath' : 'No Oath Required'}</span>
+                  <span className="text-primary font-medium">
+                    {set.requireAttestation
+                      ? "With Islamic Oath"
+                      : "No Oath Required"}
+                  </span>
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-2 text-muted-foreground border border-border/60">
                   <Eye className="w-4 h-4 text-primary" />
-                  <span className="text-primary font-medium">{set.views} Views</span>
+                  <span className="text-primary font-medium">
+                    {set.views} Views
+                  </span>
                 </div>
               </div>
             </div>
@@ -341,13 +424,23 @@ export default function PublicResponse() {
                   </div>
                   <div className="flex-1 space-y-3">
                     <div>
-                      <Label htmlFor="name" className="text-lg font-semibold text-foreground flex items-center gap-2">
+                      <Label
+                        htmlFor="name"
+                        className="text-lg font-semibold text-foreground flex items-center gap-2"
+                      >
                         {t("response.name")}
-                        {!set.allowAnonymous && <span className="text-destructive text-base">*</span>}
-                        {set.allowAnonymous && <span className="text-muted-foreground text-sm">(Optional)</span>}
+                        {!set.allowAnonymous && (
+                          <span className="text-destructive text-base">*</span>
+                        )}
+                        {set.allowAnonymous && (
+                          <span className="text-muted-foreground text-sm">
+                            (Optional)
+                          </span>
+                        )}
                       </Label>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Your name helps us provide personalized Islamic marriage guidance
+                        Your name helps us provide personalized Islamic marriage
+                        guidance
                       </p>
                     </div>
 
@@ -356,12 +449,18 @@ export default function PublicResponse() {
                         id="name"
                         {...register("name", { required: !set.allowAnonymous })}
                         className="h-12 text-base bg-background/90 border-primary/30 focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground/60"
-                        placeholder={set.allowAnonymous ? "Enter your name or leave blank for anonymous" : "Enter your full name"}
+                        placeholder={
+                          set.allowAnonymous
+                            ? "Enter your name or leave blank for anonymous"
+                            : "Enter your full name"
+                        }
                       />
                       {errors.name && (
                         <div className="flex items-center gap-2 mt-2 text-sm text-destructive">
                           <span className="w-1.5 h-1.5 rounded-full bg-destructive"></span>
-                          <span>Name is required for personalized guidance</span>
+                          <span>
+                            Name is required for personalized guidance
+                          </span>
                         </div>
                       )}
                     </div>
@@ -392,7 +491,9 @@ export default function PublicResponse() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-3">
-                        <h3 className="font-semibold text-amber-900">Islamic Oath</h3>
+                        <h3 className="font-semibold text-amber-900">
+                          Islamic Oath
+                        </h3>
                         <div className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-2 py-1 text-xs text-amber-800">
                           <Sparkles className="w-3 h-3" />
                           Sacred Commitment
@@ -400,7 +501,10 @@ export default function PublicResponse() {
                       </div>
 
                       <div className="space-y-3">
-                        <Label htmlFor="attestation" className="font-serif text-base leading-relaxed text-amber-900 cursor-pointer block">
+                        <Label
+                          htmlFor="attestation"
+                          className="font-serif text-base leading-relaxed text-amber-900 cursor-pointer block"
+                        >
                           <Checkbox
                             id="attestation"
                             {...register("attestation", { required: true })}
@@ -411,10 +515,15 @@ export default function PublicResponse() {
 
                         <div className="text-sm text-amber-800/80 leading-relaxed">
                           <p className="mb-2">
-                            <strong>Privacy & Trust:</strong> Your responses are handled with Islamic principles of Amanah (trust) and will only be shared with appropriate marriage guidance.
+                            <strong>Privacy & Trust:</strong> Your responses are
+                            handled with Islamic principles of Amanah (trust)
+                            and will only be shared with appropriate marriage
+                            guidance.
                           </p>
                           <p className="text-xs text-amber-700">
-                            By submitting, you affirm that all information provided is truthful and intended for Islamic marriage guidance only.
+                            By submitting, you affirm that all information
+                            provided is truthful and intended for Islamic
+                            marriage guidance only.
                           </p>
                         </div>
                       </div>
@@ -440,7 +549,9 @@ export default function PublicResponse() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-3">
-                      <h3 className="font-semibold text-emerald-900">Dua for Guidance</h3>
+                      <h3 className="font-semibold text-emerald-900">
+                        Dua for Guidance
+                      </h3>
                       <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-2 py-1 text-xs text-emerald-800">
                         <Crown className="w-3 h-3" />
                         Islamic Prayer
@@ -449,13 +560,18 @@ export default function PublicResponse() {
 
                     <div className="space-y-3">
                       <blockquote className="text-emerald-900 font-serif text-base leading-relaxed border-l-4 border-emerald-400 pl-4 italic">
-                        "رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا"
+                        "رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا
+                        قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا"
                       </blockquote>
                       <p className="text-sm text-emerald-800/80">
-                        <strong>Translation:</strong> "Our Lord, grant us from among our spouses and offspring comfort to our eyes and make us a leader for the righteous." (Surah Al-Furqan: 74)
+                        <strong>Translation:</strong> "Our Lord, grant us from
+                        among our spouses and offspring comfort to our eyes and
+                        make us a leader for the righteous." (Surah Al-Furqan:
+                        74)
                       </p>
                       <p className="text-xs text-emerald-700">
-                        May Allah guide you to the best partner and bless your journey with barakah and happiness. 🤲
+                        May Allah guide you to the best partner and bless your
+                        journey with barakah and happiness. 🤲
                       </p>
                     </div>
                   </div>
@@ -484,7 +600,11 @@ export default function PublicResponse() {
                       <div className="flex-1 min-w-0">
                         <Label className="text-base font-medium block text-foreground leading-snug">
                           {question.prompt}
-                          {question.required && <span className="text-destructive ml-1.5 text-sm">*</span>}
+                          {question.required && (
+                            <span className="text-destructive ml-1.5 text-sm">
+                              *
+                            </span>
+                          )}
                         </Label>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {question.required ? "Required" : "Optional"}
@@ -493,7 +613,9 @@ export default function PublicResponse() {
                     </div>
 
                     <Textarea
-                      {...register(`question_${question.id}`, { required: question.required })}
+                      {...register(`question_${question.id}`, {
+                        required: question.required,
+                      })}
                       className="min-h-[80px] max-h-[120px] resize-none bg-background/70 border-border/50 focus:border-primary/40 focus:ring-primary/10 text-sm"
                       placeholder="Share your thoughts here..."
                     />
@@ -520,7 +642,9 @@ export default function PublicResponse() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-semibold text-foreground">Ready to Submit?</h3>
+                    <h3 className="text-xl font-semibold text-foreground">
+                      Ready to Submit?
+                    </h3>
                     <p className="text-sm text-muted-foreground mt-1">
                       You can submit this form only once.
                     </p>
@@ -530,7 +654,10 @@ export default function PublicResponse() {
                     type="submit"
                     size="lg"
                     className="h-12 px-8 rounded-lg bg-primary hover:bg-primary/90 text-base font-medium"
-                    disabled={submitResponse.isPending || (set.requireAttestation && !attestationChecked)}
+                    disabled={
+                      submitResponse.isPending ||
+                      (set.requireAttestation && !attestationChecked)
+                    }
                   >
                     {submitResponse.isPending ? (
                       <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -544,12 +671,16 @@ export default function PublicResponse() {
                 {set.requireAttestation && !attestationChecked && (
                   <div className="flex items-center gap-2 text-sm text-amber-600 mt-3">
                     <Shield className="w-4 h-4" />
-                    <span>Please accept the Islamic oath above to submit your responses.</span>
+                    <span>
+                      Please accept the Islamic oath above to submit your
+                      responses.
+                    </span>
                   </div>
                 )}
 
                 <p className="text-sm text-muted-foreground mt-2">
-                  Your information is handled with Islamic principles of trust and privacy.
+                  Your information is handled with Islamic principles of trust
+                  and privacy.
                 </p>
               </div>
             </div>

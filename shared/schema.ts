@@ -11,8 +11,9 @@ import { users } from "./models/auth";
 export const questionSets = pgTable("question_sets", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
-  title: text("title").notNull(),
-  description: text("description"),
+  questionerName: text("questioner_name").notNull(), // Name of the person asking questions
+  curatorEmail: text("curator_email"), // Optional email for questioner-side curator
+  answererCuratorEmail: text("answerer_curator_email"), // Optional email for answerer-side curator
   token: text("token").notNull().unique(), // Shareable token
   isOpen: boolean("is_open").default(true).notNull(),
   requireAttestation: boolean("require_attestation").default(false).notNull(),
