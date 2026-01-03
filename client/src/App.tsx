@@ -23,6 +23,7 @@ import BiodataView from "@/pages/BiodataView";
 import BiodataWizard from "@/pages/BiodataWizard";
 import Community from "./pages/Community";
 import MarriageGuide from "./pages/MarriageGuide";
+import SabrAcademy from "./pages/SabrAcademy";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "@/pages/not-found";
@@ -66,6 +67,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/academy" component={SabrAcademy} />
       <Route path="/marriage-guide" component={MarriageGuide} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />

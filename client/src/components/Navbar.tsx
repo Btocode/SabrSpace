@@ -10,7 +10,8 @@ import {
   Languages,
   Heart,
   UserPlus,
-  MessageCircle
+  MessageCircle,
+  GraduationCap
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -46,15 +47,26 @@ export function Navbar() {
         </Link>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={toggleLanguage}
             className="text-muted-foreground hover:text-foreground font-medium"
           >
             <Languages className="w-4 h-4 mr-2" />
             {locale === 'en' ? 'English' : 'বাংলা'}
           </Button>
+
+          <Link href="/academy">
+            <Button
+              variant={location === "/academy" ? "secondary" : "ghost"}
+              size="sm"
+              className="hidden md:flex"
+            >
+              <GraduationCap className="w-4 h-4 mr-2" />
+              Academy
+            </Button>
+          </Link>
 
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
@@ -114,6 +126,12 @@ export function Navbar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuItem asChild>
+                    <Link href="/academy" className="cursor-pointer md:hidden">
+                      <GraduationCap className="mr-2 h-4 w-4" />
+                      Academy
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard" className="cursor-pointer md:hidden">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
