@@ -38,7 +38,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export function CreateSetForm() {
+export function CreateSetForm({ setCreatedSetUrl, createdSetUrl }: { setCreatedSetUrl?: (url: string | null) => void, createdSetUrl?: string | null }) {
   const { t } = useLanguage();
   const { user, isAuthenticated } = useAuth();
   const { addToast } = useToast();
@@ -48,7 +48,9 @@ export function CreateSetForm() {
   const [anonymousEmail, setAnonymousEmail] = useState("");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [lastSaveType, setLastSaveType] = useState<'regular' | 'anonymous' | null>(null);
-  const [createdSetUrl, setCreatedSetUrl] = useState<string | null>(null);
+  // If setCreatedSetUrl is not provided, fallback to local state for backward compatibility
+  const [localCreatedSetUrl, localSetCreatedSetUrl] = useState<string | null>(null);
+  const url = createdSetUrl !== undefined ? createdSetUrl : localCreatedSetUrl;
 
   useEffect(() => {
     console.log("CreateSetForm - Auth state changed:", { isAuthenticated, user });
@@ -65,7 +67,11 @@ export function CreateSetForm() {
       });
       // Generate the share URL
       const shareUrl = `${window.location.origin}/s/${createSet.data.token}`;
-      setCreatedSetUrl(shareUrl);
+      if (setCreatedSetUrl) {
+        setCreatedSetUrl(shareUrl);
+      } else {
+        localSetCreatedSetUrl(shareUrl);
+      }
       setLastSaveType(null);
     }
   }, [createSet.isSuccess, lastSaveType, createSet.data, addToast]);
@@ -201,34 +207,32 @@ export function CreateSetForm() {
     setDraggedIndex(null);
   };
 
-  if (createdSetUrl) {
+  if (url) {
     return (
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-lg w-full mx-auto px-2 sm:px-0">
         <Card className="shadow-xl border-border/50">
-          <CardContent className="p-8 text-center">
-            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-10 h-10 text-primary" />
+          <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4 sm:mb-6 mx-auto">
+              <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
             </div>
-
-            <h3 className="text-3xl font-bold mb-4 text-primary font-serif">{t("set.savePrompt")}</h3>
-            <p className="text-muted-foreground mb-6 text-lg">
+            <h3 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-4 text-primary font-serif">{t("set.savePrompt")}</h3>
+            <p className="text-muted-foreground mb-4 sm:mb-6 text-base sm:text-lg">
               {t("set.saveDesc")}
             </p>
-
-            <div className="bg-primary/5 p-6 rounded-xl mb-6 border border-primary/20">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Share2 className="w-6 h-6 text-primary" />
-                <span className="font-medium text-lg text-primary font-serif">Share Link</span>
+            <div className="bg-primary/5 p-4 sm:p-6 rounded-xl mb-4 sm:mb-6 border border-primary/20 w-full">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-3">
+                <Share2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                <span className="font-medium text-base sm:text-lg text-primary font-serif">Share Link</span>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full">
                 <Input
-                  value={createdSetUrl}
+                  value={url}
                   readOnly
-                  className="flex-1 font-mono text-base bg-white/50 border-border/50"
+                  className="flex-1 font-mono text-sm sm:text-base bg-white/50 border-border/50"
                 />
                 <Button
                   onClick={() => {
-                    navigator.clipboard.writeText(createdSetUrl);
+                    navigator.clipboard.writeText(url);
                     addToast({
                       type: "success",
                       title: "Copied!",
@@ -236,7 +240,7 @@ export function CreateSetForm() {
                       duration: 2000
                     });
                   }}
-                  className="rounded-full px-6 shadow-lg shadow-primary/20"
+                  className="rounded-full px-4 sm:px-6 shadow-lg shadow-primary/20 w-full sm:w-auto"
                   size="lg"
                 >
                   <Copy className="w-5 h-5 mr-2" />
@@ -244,18 +248,17 @@ export function CreateSetForm() {
                 </Button>
               </div>
             </div>
-
-            <div className="flex gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full justify-center">
               <Button
                 onClick={() => setLocation("/dashboard")}
                 variant="outline"
-                className="rounded-full px-6 py-3"
+                className="rounded-full px-4 py-3 w-full sm:w-auto"
               >
                 Go to Dashboard
               </Button>
               <Button
                 onClick={() => setLocation("/create")}
-                className="rounded-full px-6 py-3 shadow-lg shadow-primary/20"
+                className="rounded-full px-4 py-3 shadow-lg shadow-primary/20 w-full sm:w-auto"
               >
                 Create Another Set
               </Button>
