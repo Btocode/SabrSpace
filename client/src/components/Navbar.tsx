@@ -11,7 +11,8 @@ import {
   Heart,
   UserPlus,
   MessageCircle,
-  GraduationCap
+  GraduationCap,
+  Users
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -92,6 +93,17 @@ export function Navbar() {
                 </Button>
               </Link>
 
+              <Link href="/public-biodata">
+                <Button
+                  variant={location === "/public-biodata" ? "secondary" : "ghost"}
+                  size="sm"
+                  className="hidden md:flex"
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Public Portal
+                </Button>
+              </Link>
+
               <Link href="/community">
                 <Button
                   variant={location === "/community" ? "secondary" : "ghost"}
@@ -142,6 +154,12 @@ export function Navbar() {
                     <Link href="/biodata" className="cursor-pointer md:hidden">
                       <Heart className="mr-2 h-4 w-4" />
                       Biodata
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/public-biodata" className="cursor-pointer md:hidden">
+                      <Users className="mr-2 h-4 w-4" />
+                      Public Portal
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
