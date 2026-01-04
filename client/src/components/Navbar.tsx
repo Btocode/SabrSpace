@@ -82,9 +82,9 @@ export function Navbar() {
                 </Button>
               </Link>
 
-              <Link href="/biodata">
+              <Link href="/public-biodata">
                 <Button
-                  variant={location.startsWith("/biodata") ? "secondary" : "ghost"}
+                  variant={location === "/public-biodata" ? "secondary" : "ghost"}
                   size="sm"
                   className="hidden md:flex"
                 >
@@ -151,7 +151,7 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/biodata" className="cursor-pointer md:hidden">
+                    <Link href="/public-biodata" className="cursor-pointer md:hidden">
                       <Heart className="mr-2 h-4 w-4" />
                       Biodata
                     </Link>

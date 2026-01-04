@@ -22,6 +22,7 @@ import BiodataList from "@/pages/BiodataList";
 import BiodataView from "@/pages/BiodataView";
 import BiodataWizard from "@/pages/BiodataWizard";
 import PublicBiodataList from "@/pages/PublicBiodataList";
+import PublicBiodataView from "@/pages/PublicBiodataView";
 import Community from "./pages/Community";
 import MarriageGuide from "./pages/MarriageGuide";
 import SabrAcademy from "./pages/SabrAcademy";
@@ -76,6 +77,7 @@ function Router() {
       <Route path="/demo" component={DemoWizard} />
       <Route path="/s/:token" component={PublicResponse} />
       <Route path="/public-biodata" component={PublicBiodataList} />
+      <Route path="/public-biodata/:id" component={PublicBiodataView} />
       <Route path="/b/:token" component={BiodataView} />
 
       {/* Protected Routes */}
