@@ -71,17 +71,6 @@ export function Navbar() {
 
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
-              <Link href="/dashboard">
-                <Button
-                  variant={location === "/dashboard" ? "secondary" : "ghost"}
-                  size="sm"
-                  className="hidden md:flex"
-                >
-                  <LayoutDashboard className="w-4 h-4 mr-2" />
-                  {t("nav.dashboard")}
-                </Button>
-              </Link>
-
               <Link href="/public-biodata">
                 <Button
                   variant={location === "/public-biodata" ? "secondary" : "ghost"}
@@ -90,17 +79,6 @@ export function Navbar() {
                 >
                   <Heart className="w-4 h-4 mr-2" />
                   Biodata
-                </Button>
-              </Link>
-
-              <Link href="/public-biodata">
-                <Button
-                  variant={location === "/public-biodata" ? "secondary" : "ghost"}
-                  size="sm"
-                  className="hidden md:flex"
-                >
-                  <Users className="w-4 h-4 mr-2" />
-                  Public Portal
                 </Button>
               </Link>
 
@@ -115,14 +93,14 @@ export function Navbar() {
                 </Button>
               </Link>
 
-              <Link href="/create">
+              <Link href="/dashboard">
                 <Button
                   variant="default"
                   size="sm"
                   className="bg-primary text-primary-foreground hover:bg-primary/90 hidden md:flex"
                 >
-                  <PlusCircle className="w-4 h-4 mr-2" />
-                  {t("nav.create")}
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  {t("nav.dashboard")}
                 </Button>
               </Link>
 
@@ -157,21 +135,9 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/public-biodata" className="cursor-pointer md:hidden">
-                      <Users className="mr-2 h-4 w-4" />
-                      Public Portal
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
                     <Link href="/community" className="cursor-pointer md:hidden">
                       <MessageCircle className="mr-2 h-4 w-4" />
                       Community
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/create" className="cursor-pointer md:hidden">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      {t("nav.create")}
                     </Link>
                   </DropdownMenuItem>
                   {isAnonymous && (
