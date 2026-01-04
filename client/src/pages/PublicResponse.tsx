@@ -37,6 +37,14 @@ import { useForm } from "react-hook-form";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Helper to get/set localStorage for single-response and draft
+function getLocalResponseKey(token: string) {
+  return `sabrspace_response_${token}`;
+}
+function getLocalDraftKey(token: string) {
+  return `sabrspace_draft_${token}`;
+}
+
 export default function PublicResponse() {
   const [, params] = useRoute("/s/:token");
   const token = params?.token || "";
@@ -46,6 +54,8 @@ export default function PublicResponse() {
   const { addToast } = useToast();
   const { t, locale, setLocale } = useLanguage();
   const [success, setSuccess] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [showDraftWarning, setShowDraftWarning] = useState(false);
   const [curatorDialogOpen, setCuratorDialogOpen] = useState(false);
   const [curatorEmail, setCuratorEmail] = useState("");
   const curatorSuccessHandled = useRef(false);
@@ -55,10 +65,57 @@ export default function PublicResponse() {
     handleSubmit,
     formState: { errors, isValid },
     watch,
+    setValue,
+    getValues,
+    reset,
   } = useForm();
 
   // Watch attestation for validation if required
   const attestationChecked = watch("attestation");
+
+  // On mount, check if already submitted (single response mode)
+  useEffect(() => {
+    if (set && !set.allowMultipleSubmissions) {
+      const key = getLocalResponseKey(token);
+      if (localStorage.getItem(key)) {
+        setHasSubmitted(true);
+      }
+    }
+  }, [set, token]);
+
+  // Save draft to localStorage on change
+  useEffect(() => {
+    if (!set) return;
+    const subscription = watch((values) => {
+      localStorage.setItem(getLocalDraftKey(token), JSON.stringify(values));
+    });
+    return () => subscription.unsubscribe();
+  }, [set, token, watch]);
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    if (!set) return;
+    const draft = localStorage.getItem(getLocalDraftKey(token));
+    if (draft) {
+      try {
+        reset(JSON.parse(draft));
+        setShowDraftWarning(true);
+      } catch {}
+    }
+  }, [set, token, reset]);
+
+  // Warn on reload if draft exists
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (localStorage.getItem(getLocalDraftKey(token))) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [token]);
 
   // Handle curator addition success/error
   useEffect(() => {
@@ -127,11 +184,23 @@ export default function PublicResponse() {
     );
 
   const onSubmit = (data: any) => {
+    if (set && !set.allowMultipleSubmissions) {
+      const key = getLocalResponseKey(token);
+      if (localStorage.getItem(key)) {
+        setHasSubmitted(true);
+        addToast({
+          type: "error",
+          title: "Already Submitted",
+          description: "You have already submitted a response for this set.",
+          duration: 4000,
+        });
+        return;
+      }
+    }
     const answers = set.questions.map((q: any) => ({
       questionId: q.id,
       value: data[`question_${q.id}`],
     }));
-
     submitResponse.mutate(
       {
         token,
@@ -151,6 +220,12 @@ export default function PublicResponse() {
             duration: 4000,
           });
           setSuccess(true);
+          // Mark as submitted for single-response mode
+          if (set && !set.allowMultipleSubmissions) {
+            localStorage.setItem(getLocalResponseKey(token), "1");
+          }
+          // Remove draft
+          localStorage.removeItem(getLocalDraftKey(token));
         },
         onError: (error: any) => {
           addToast({
@@ -164,7 +239,25 @@ export default function PublicResponse() {
     );
   };
 
+  if (hasSubmitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="max-w-md w-full bg-white/90 rounded-xl shadow-lg p-8 text-center">
+          <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-primary mb-2">Response Already Submitted</h2>
+          <p className="text-muted-foreground mb-4">You have already submitted a response for this set. Only one response is allowed.</p>
+        </div>
+      </div>
+    );
+  }
   if (success) {
+      {showDraftWarning && (
+        <div className="fixed top-0 left-0 w-full z-50 flex justify-center">
+          <div className="bg-amber-100 border border-amber-300 text-amber-900 rounded-b-xl px-4 py-2 text-sm shadow-md mt-0">
+            <b>Warning:</b> You have a saved draft. Reloading or closing this page may cause you to lose unsaved data.
+          </div>
+        </div>
+      )}
     return (
       <div className="min-h-screen bg-pattern flex items-center justify-center p-4">
         <div className="bg-white/95 backdrop-blur-sm max-w-2xl w-full rounded-3xl shadow-xl border border-primary/20 overflow-hidden">
@@ -234,31 +327,31 @@ export default function PublicResponse() {
       {/* Soft background accent */}
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(60rem_40rem_at_10%_10%,rgba(99,102,241,0.08),transparent_60%),radial-gradient(50rem_30rem_at_90%_20%,rgba(245,158,11,0.06),transparent_55%)]" />
 
-      {/* Top Logo and Language Toggle - Responsive */}
-      <div className="fixed top-2 left-2 z-30 flex gap-2 items-center sm:static sm:top-4 sm:left-4">
-        <div className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-            <span className="text-xl font-serif text-primary">س</span>
+      {/* Top Header - Logo and Language Toggle */}
+      <div className="fixed top-0 left-0 right-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/40 sm:static sm:border-0 sm:bg-transparent sm:backdrop-blur-none">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+              <span className="text-xl font-serif text-primary">س</span>
+            </div>
+            <span className="font-bold text-base sm:text-lg tracking-tight text-foreground/90 group-hover:text-primary transition-colors">
+              {t("app.name")}
+            </span>
           </div>
-          <span className="font-bold text-base sm:text-lg tracking-tight text-foreground/90 group-hover:text-primary transition-colors">
-            {t("app.name")}
-          </span>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setLocale(locale === "en" ? "bn" : "en")}
+            className="bg-white/90 backdrop-blur-sm border-emerald-200 hover:bg-emerald-50 rounded-full px-3 py-1 text-xs sm:text-sm"
+          >
+            <Languages className="w-4 h-4 mr-2" />
+            {locale === "en" ? "বাংলা" : "English"}
+          </Button>
         </div>
       </div>
 
-      <div className="fixed top-2 right-2 z-30 sm:static sm:top-4 sm:right-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setLocale(locale === "en" ? "bn" : "en")}
-          className="bg-white/90 backdrop-blur-sm border-emerald-200 hover:bg-emerald-50 rounded-full px-3 py-1 text-xs sm:text-sm"
-        >
-          <Languages className="w-4 h-4 mr-2" />
-          {locale === "en" ? "বাংলা" : "English"}
-        </Button>
-      </div>
-
-      <div className="relative max-w-2xl sm:max-w-3xl md:max-w-4xl mx-auto px-2 sm:px-4 pt-6 sm:pt-8">
+      <div className="relative max-w-2xl sm:max-w-3xl md:max-w-4xl mx-auto px-2 sm:px-4 pt-20 sm:pt-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

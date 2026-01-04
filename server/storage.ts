@@ -26,6 +26,7 @@ export interface IStorage {
   // Responses
   submitResponse(token: string, data: SubmitResponseRequest, userId?: string): Promise<Response>;
   getResponses(setId: number, userId: string): Promise<ResponseWithDetails[]>;
+  getResponsesByTokenForCurator(token: string, curatorEmail: string): Promise<ResponseWithDetails[]>;
   
   // Dashboard
   getStats(userId: string): Promise<{ totalSets: number; totalResponses: number; totalViews: number }>;
@@ -241,6 +242,29 @@ export class DatabaseStorage implements IStorage {
 
     const res = await db.query.responses.findMany({
       where: eq(responses.setId, setId),
+      with: {
+        answers: {
+          with: {
+            question: true
+          }
+        }
+      },
+      orderBy: (responses, { desc }) => [desc(responses.submittedAt)],
+    });
+    return res as ResponseWithDetails[];
+  }
+
+  async getResponsesByTokenForCurator(token: string, curatorEmail: string): Promise<ResponseWithDetails[]> {
+    const set = await this.getQuestionSetByToken(token);
+    if (!set) throw new Error("Set not found");
+    
+    // Verify curator email matches
+    if (set.answererCuratorEmail !== curatorEmail) {
+      throw new Error("Unauthorized: Curator email does not match");
+    }
+
+    const res = await db.query.responses.findMany({
+      where: eq(responses.setId, set.id),
       with: {
         answers: {
           with: {

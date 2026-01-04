@@ -16,6 +16,7 @@ import Dashboard from "@/pages/Dashboard";
 import CreateSet from "@/pages/CreateSet";
 import SetResponses from "@/pages/SetResponses";
 import PublicResponse from "@/pages/PublicResponse";
+import CuratorView from "@/pages/CuratorView";
 import DemoWizard from "@/pages/DemoWizard";
 import Login from "@/pages/Login";
 import BiodataList from "@/pages/BiodataList";
@@ -79,6 +80,7 @@ function Router() {
       <Route path="/public-biodata" component={PublicBiodataList} />
       <Route path="/public-biodata/:id" component={PublicBiodataView} />
       <Route path="/b/:token" component={BiodataView} />
+      <Route path="/sets/curator/:token" component={CuratorView} />
 
       {/* Protected Routes */}
       <Route path="/dashboard">

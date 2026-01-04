@@ -93,6 +93,30 @@ export async function registerRoutes(
     }
   });
 
+  // Curator: Get responses by token
+  app.get(api.responses.getByTokenForCurator.path, async (req, res) => {
+    try {
+      const { token } = req.params;
+      const curatorEmail = req.query.curatorEmail as string;
+      
+      if (!curatorEmail) {
+        return res.status(400).json({ message: "Curator email is required" });
+      }
+
+      const responses = await storage.getResponsesByTokenForCurator(token, curatorEmail);
+      res.json(responses);
+    } catch (err: any) {
+      if (err.message === "Set not found") {
+        return res.status(404).json({ message: err.message });
+      }
+      if (err.message.includes("Unauthorized")) {
+        return res.status(403).json({ message: err.message });
+      }
+      console.error("Error getting curator responses:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // === Protected Routes ===
   // Helper to get numeric user ID from auth (Replit auth uses string sub, we map to int user.id if needed, 
   // but wait, schema defines User.id as Serial (int). 

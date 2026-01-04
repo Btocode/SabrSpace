@@ -162,6 +162,15 @@ export const api = {
         403: errorSchemas.unauthorized,
       },
     },
+    getByTokenForCurator: {
+      method: 'GET' as const,
+      path: '/api/public/sets/:token/responses/curator',
+      responses: {
+        200: z.array(z.custom<any>()), // ResponseWithDetails
+        403: errorSchemas.unauthorized,
+        404: errorSchemas.notFound,
+      },
+    },
   },
   notifications: {
     list: {

@@ -59,3 +59,22 @@ export function useSetResponses(setId: number) {
     enabled: !!setId && !isNaN(setId),
   });
 }
+
+// Public: Get Responses by Token for Curator
+export function useCuratorResponses(token: string, curatorEmail: string | null) {
+  return useQuery({
+    queryKey: [api.responses.getByTokenForCurator.path, token, curatorEmail],
+    queryFn: async () => {
+      if (!curatorEmail) throw new Error("Curator email is required");
+      const url = buildUrl(api.responses.getByTokenForCurator.path, { token });
+      const res = await fetch(`${url}?curatorEmail=${encodeURIComponent(curatorEmail)}`);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to fetch responses");
+      }
+      return api.responses.getByTokenForCurator.responses[200].parse(await res.json());
+    },
+    enabled: !!token && !!curatorEmail,
+    retry: false,
+  });
+}

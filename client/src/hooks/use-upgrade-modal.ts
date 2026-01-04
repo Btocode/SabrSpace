@@ -12,3 +12,4 @@ export const useUpgradeModal = create<UpgradeModalState>((set) => ({
   closeModal: () => set({ isOpen: false }),
 }));
 
+

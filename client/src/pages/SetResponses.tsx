@@ -22,113 +22,61 @@ export default function SetResponses() {
   if (setLoading) return <div className="p-8"><Skeleton className="h-96 w-full" /></div>;
   if (!set) return <div>Not found</div>;
 
+  // If set is single-response and user has already submitted, show the dua/success UI
+  if (set && !set.allowMultipleSubmissions && responses?.length === 1) {
+    return (
+      <div className="min-h-screen bg-pattern flex items-center justify-center p-4">
+        <div className="bg-white/95 backdrop-blur-sm max-w-2xl w-full rounded-3xl shadow-xl border border-primary/20 overflow-hidden">
+          <div className="flex">
+            {/* Left Section - Islamic Greeting */}
+            <div className="flex-1 bg-gradient-to-br from-primary/5 via-primary/3 to-accent/5 p-8 text-center flex flex-col justify-center">
+              <div className="space-y-4">
+                <h2 className="text-4xl font-bold font-serif text-primary mb-2">
+                  جزاك الله خيراً
+                </h2>
+                <p className="text-xl text-primary font-medium">
+                  JazakAllah Khair
+                </p>
+                <p className="text-muted-foreground leading-relaxed text-base mt-4">
+                  {t("response.success")}
+                </p>
+                <p className="text-base text-muted-foreground mt-2">
+                  You have already submitted a response for this set. Only one response is allowed.
+                </p>
+              </div>
+            </div>
+            {/* Right Section - Islamic Blessings */}
+            <div className="flex-1 bg-gradient-to-br from-emerald-50 via-primary/5 to-amber-50 p-8 flex flex-col justify-center">
+              <div className="space-y-4">
+                <p className="text-sm text-emerald-800 leading-relaxed italic text-center">
+                  "May Allah bless you with the best partner and fill your life with barakah and happiness. 🤲"
+                </p>
+                <p className="text-xs text-emerald-700 font-medium text-center mt-4">
+                  May your sincere responses bring you closer to finding your ideal Islamic marriage partner through divine guidance.
+                </p>
+              </div>
+            </div>
+          </div>
+          {/* Powered by SabrSpace Banner */}
+          <div className="bg-gradient-to-r from-primary/8 via-primary/4 to-accent/8 border-t border-primary/15 px-6 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Powered by</span>
+                <span className="font-bold text-primary">SabrSpace</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ...existing code...
   return (
     <div className="min-h-screen bg-pattern">
       <Navbar />
-      
       <main className="container mx-auto px-4 py-8">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold font-serif text-primary mb-2">
-            Responses for {set.questionerName}'s Questions
-          </h1>
-          <div className="flex items-center gap-4 mt-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MessageSquareQuote className="w-4 h-4" />
-              <span>{set.questions?.length || 0} questions</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Globe className="w-4 h-4" />
-              <span>{set.views} public views</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="w-4 h-4" />
-              <span>{format(new Date(set.createdAt!), "PPP")}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 mt-3">
-            {set.requireAttestation && (
-              <Badge variant="outline" className="text-amber-700 border-amber-200">
-                Islamic Oath Required
-              </Badge>
-            )}
-            {set.curatorEmail && (
-              <Badge variant="outline" className="text-emerald-700 border-emerald-200">
-                Questioner Curator: {set.curatorEmail}
-              </Badge>
-            )}
-            {set.answererCuratorEmail && (
-              <Badge variant="outline" className="text-blue-700 border-blue-200">
-                Answerer Curator: {set.answererCuratorEmail}
-              </Badge>
-            )}
-            {!set.isOpen && (
-              <Badge variant="secondary">Closed</Badge>
-            )}
-          </div>
-        </header>
-
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Stats/Filter Sidebar (could be expanded) */}
-          <div className="lg:col-span-1 space-y-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground mb-1">{t("responses.total")}</div>
-                <div className="text-2xl font-bold text-foreground">{responses?.length || 0}</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Responses List */}
-          <div className="lg:col-span-3 space-y-4">
-            {responsesLoading ? (
-              [1,2,3].map(i => <Skeleton key={i} className="h-32 w-full" />)
-            ) : responses?.length === 0 ? (
-              <div className="text-center py-20 text-muted-foreground">{t("responses.noResponses")}</div>
-            ) : (
-              responses?.map((response: any) => (
-                <Card key={response.id} className="overflow-hidden border-l-4 border-l-primary/40">
-                  <CardHeader className="bg-muted/30 pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-foreground">
-                          {response.responderName || t("responses.anonymous")}
-                        </span>
-                        {response.attestationAcceptedAt && (
-                          <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50">
-                            {t("responses.attested")}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Globe className="w-3 h-3" /> {response.localeUsed === 'en' ? t("responses.english") : t("responses.bangla")}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" /> {format(new Date(response.submittedAt), "MMM d, h:mm a")}
-                        </span>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <Accordion type="single" collapsible className="w-full">
-                      {response.answers.map((answer: any, idx: number) => (
-                        <div key={answer.id} className="border-b last:border-0 px-6 py-4 hover:bg-muted/10 transition-colors">
-                          <p className="text-sm font-medium text-muted-foreground mb-2">
-                            {answer.question.prompt}
-                          </p>
-                          <div className="flex gap-3">
-                            <MessageSquareQuote className="w-5 h-5 text-primary/40 shrink-0 mt-0.5" />
-                            <p className="text-foreground whitespace-pre-wrap">{answer.value}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </Accordion>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </div>
+        {/* ...existing code... */}
       </main>
     </div>
   );
