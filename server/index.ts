@@ -22,6 +22,31 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
+// CORS configuration for separate frontend/backend deployments
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',')
+    : ['http://localhost:5173', 'http://localhost:3000', "https://sabrspace.onrender.com"]; // Default dev origins
+
+  // Allow requests from frontend origin or if serving both together
+  if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  } else if (process.env.FRONTEND_URL) {
+    res.setHeader('Access-Control-Allow-Origin', process.env.FRONTEND_URL);
+  }
+
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",

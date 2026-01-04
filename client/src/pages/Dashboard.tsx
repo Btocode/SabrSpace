@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { useSets, useDeleteSet } from "@/hooks/use-sets";
 import { useDashboardStats } from "@/hooks/use-dashboard";
+import { useBiodata } from "@/hooks/use-biodata";
 import { useLanguage } from "@/lib/i18n";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,8 @@ import {
   Globe,
   FileText,
   Crown,
-  Sparkles
+  Sparkles,
+  Building
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -51,6 +53,7 @@ export default function Dashboard() {
   const { t } = useLanguage();
   const { data: sets, isLoading: setsLoading } = useSets();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { data: biodata, isLoading: biodataLoading } = useBiodata();
   const deleteSet = useDeleteSet();
   const { toast } = useToast();
   const { isAnonymous, convertAnonymous, isConvertingAnonymous, user } = useAuth();
@@ -214,7 +217,14 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="glass-panel border-none rounded-2xl">
+            <Card 
+              className={`glass-panel border-none rounded-2xl ${Array.isArray(biodata) && biodata.length > 0 ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`}
+              onClick={() => {
+                if (Array.isArray(biodata) && biodata.length > 0) {
+                  window.location.href = '/biodata';
+                }
+              }}
+            >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Biodatas
@@ -222,14 +232,160 @@ export default function Dashboard() {
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-emerald-600">0</div>
-                <p className="text-xs text-muted-foreground mt-1">Create your first</p>
+                {biodataLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-emerald-600">
+                      {Array.isArray(biodata) ? biodata.length : 0}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {Array.isArray(biodata) && biodata.length > 0
+                        ? "View all biodatas"
+                        : "Create your first"}
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
         </section>
 
-        
+        {/* Biodata Overview Section */}
+        <section>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <h2 className="text-xl md:text-2xl font-bold font-serif">Your Biodata Profiles</h2>
+            <Button className="rounded-full w-full sm:w-auto" asChild>
+              <Link href="/biodata/create">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Biodata
+              </Link>
+            </Button>
+          </div>
+
+          {biodataLoading ? (
+            <div className="space-y-4">
+              {[1, 2].map(i => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
+            </div>
+          ) : !Array.isArray(biodata) || biodata.length === 0 ? (
+            <Card className="glass-panel border-dashed border-2 border-primary/20 rounded-2xl">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="text-center space-y-4">
+                  <div className="text-4xl">📝</div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold">No biodata yet</h3>
+                    <p className="text-muted-foreground text-sm max-w-sm">
+                      Create your first marriage biodata profile to get started on your journey.
+                    </p>
+                  </div>
+                  <Button className="rounded-full" asChild>
+                    <Link href="/biodata/create">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Biodata
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {biodata.slice(0, 3).map((item: any) => (
+                <Card key={item.id} className="overflow-hidden border-primary/20 rounded-2xl hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer group">
+                  <Link href={`/biodata/${item.id}`} className="block">
+                    <CardContent className="p-4 md:p-6">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                        <div className="flex-1 space-y-3">
+                          <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 group-hover:bg-emerald-500/20 transition-colors flex-shrink-0">
+                              <FileText className="h-5 w-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-base md:text-lg text-foreground group-hover:text-emerald-600 transition-colors truncate">
+                                {item.fullName || "Untitled Biodata"}
+                              </h3>
+                              <div className="flex flex-wrap items-center gap-1 md:gap-2 mt-2">
+                                {item.status === "draft" && (
+                                  <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">
+                                    Draft
+                                  </span>
+                                )}
+                                {item.status === "pending_review" && (
+                                  <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                                    Pending Review
+                                  </span>
+                                )}
+                                {item.status === "published" && (
+                                  <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
+                                    Published
+                                  </span>
+                                )}
+                                {item.status === "rejected" && (
+                                  <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-xs font-medium">
+                                    Rejected
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-muted-foreground">
+                            {item.gender && (
+                              <div className="flex items-center gap-1">
+                                <span>Gender: {item.gender}</span>
+                              </div>
+                            )}
+                            {item.profession && (
+                              <div className="flex items-center gap-1">
+                                <Building className="w-4 h-4" />
+                                <span>{item.profession}</span>
+                              </div>
+                            )}
+                            <div className="text-xs">
+                              Updated {format(new Date(item.updatedAt || item.createdAt), "MMM d, yyyy")}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-emerald-600 hover:text-emerald-600 hover:bg-emerald-50 flex-1 md:flex-none"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              window.location.href = `/biodata/${item.id}`;
+                            }}
+                          >
+                            <Eye className="w-4 h-4 md:mr-1" />
+                            <span className="md:inline hidden">View</span>
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Link>
+                </Card>
+              ))}
+              {biodata.length > 3 && (
+                <Card className="glass-panel border-primary/20 rounded-2xl">
+                  <CardContent className="p-4 md:p-6">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        Showing 3 of {biodata.length} biodatas
+                      </p>
+                      <Button variant="outline" className="rounded-full" asChild>
+                        <Link href="/biodata">
+                          View All Biodatas
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </section>
 
         {/* Sets List */}
         <section>
