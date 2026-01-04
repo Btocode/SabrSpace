@@ -230,45 +230,45 @@ export default function PublicResponse() {
   }
 
   return (
-    <div className="min-h-screen bg-pattern pb-20">
+    <div className="min-h-screen bg-pattern pb-24">
       {/* Soft background accent */}
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(60rem_40rem_at_10%_10%,rgba(99,102,241,0.08),transparent_60%),radial-gradient(50rem_30rem_at_90%_20%,rgba(245,158,11,0.06),transparent_55%)]" />
 
-      {/* Top Logo and Language Toggle */}
-      <div className="absolute top-4 left-4 z-20">
+      {/* Top Logo and Language Toggle - Responsive */}
+      <div className="fixed top-2 left-2 z-30 flex gap-2 items-center sm:static sm:top-4 sm:left-4">
         <div className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
             <span className="text-xl font-serif text-primary">س</span>
           </div>
-          <span className="font-bold text-lg tracking-tight text-foreground/90 group-hover:text-primary transition-colors">
+          <span className="font-bold text-base sm:text-lg tracking-tight text-foreground/90 group-hover:text-primary transition-colors">
             {t("app.name")}
           </span>
         </div>
       </div>
 
-      <div className="absolute top-4 right-4 z-20">
+      <div className="fixed top-2 right-2 z-30 sm:static sm:top-4 sm:right-4">
         <Button
           variant="outline"
           size="sm"
           onClick={() => setLocale(locale === "en" ? "bn" : "en")}
-          className="bg-white/90 backdrop-blur-sm border-emerald-200 hover:bg-emerald-50 rounded-full"
+          className="bg-white/90 backdrop-blur-sm border-emerald-200 hover:bg-emerald-50 rounded-full px-3 py-1 text-xs sm:text-sm"
         >
           <Languages className="w-4 h-4 mr-2" />
-          {locale === "en" ? "বাংলا" : "English"}
+          {locale === "en" ? "বাংলা" : "English"}
         </Button>
       </div>
 
-      <div className="relative max-w-4xl mx-auto px-4 pt-8">
+      <div className="relative max-w-2xl sm:max-w-3xl md:max-w-4xl mx-auto px-2 sm:px-4 pt-6 sm:pt-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-8"
+          className="mb-6 sm:mb-8"
         >
-          <Bismillah className="mb-6 opacity-80" />
+          <Bismillah className="mb-4 sm:mb-6 opacity-80" />
 
           {/* Reorganized Left-Aligned Hero Header */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/8 via-background to-amber-500/8 border border-primary/15 p-6 shadow-lg">
+          <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/8 via-background to-amber-500/8 border border-primary/15 p-4 sm:p-6 shadow-lg">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/3 to-amber-500/3" />
             <div className="relative">
               {/* Add Curator Button - Top Right */}
@@ -349,7 +349,7 @@ export default function PublicResponse() {
               )}
 
               {/* Header Row */}
-              <div className="mb-4">
+              <div className="mb-3 sm:mb-4">
                 {/* Question Creator Info */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                   <User className="w-4 h-4 text-primary" />
@@ -376,7 +376,7 @@ export default function PublicResponse() {
               </div>
 
               {/* Stats Row */}
-              <div className="flex flex-wrap gap-3 text-xs">
+              <div className="flex flex-wrap gap-2 sm:gap-3 text-xs">
                 <div className="inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-2 text-muted-foreground border border-border/60">
                   <MessageSquare className="w-4 h-4 text-primary" />
                   <span className="text-primary font-medium">
@@ -407,7 +407,7 @@ export default function PublicResponse() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.6 }}
           onSubmit={handleSubmit(onSubmit)}
-          className="space-y-8"
+          className="space-y-6 sm:space-y-8"
         >
           {/* Responder Info - Enhanced Name Field */}
           <motion.div
@@ -415,32 +415,31 @@ export default function PublicResponse() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-background to-primary/5 border border-primary/20 p-6 shadow-lg">
+            <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/10 via-background to-primary/5 border border-primary/20 p-4 sm:p-6 shadow-lg">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent" />
               <div className="relative">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary mb-2 sm:mb-0">
                     <User className="h-5 w-5" />
                   </div>
-                  <div className="flex-1 space-y-3">
+                  <div className="flex-1 space-y-2 sm:space-y-3">
                     <div>
                       <Label
                         htmlFor="name"
-                        className="text-lg font-semibold text-foreground flex items-center gap-2"
+                        className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2"
                       >
                         {t("response.name")}
                         {!set.allowAnonymous && (
                           <span className="text-destructive text-base">*</span>
                         )}
                         {set.allowAnonymous && (
-                          <span className="text-muted-foreground text-sm">
+                          <span className="text-muted-foreground text-xs sm:text-sm">
                             (Optional)
                           </span>
                         )}
                       </Label>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Your name helps us provide personalized Islamic marriage
-                        guidance
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                        Your name helps us provide personalized Islamic marriage guidance
                       </p>
                     </div>
 
@@ -448,7 +447,7 @@ export default function PublicResponse() {
                       <Input
                         id="name"
                         {...register("name", { required: !set.allowAnonymous })}
-                        className="h-12 text-base bg-background/90 border-primary/30 focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground/60"
+                        className="h-10 sm:h-12 text-sm sm:text-base bg-background/90 border-primary/30 focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground/60"
                         placeholder={
                           set.allowAnonymous
                             ? "Enter your name or leave blank for anonymous"
@@ -456,7 +455,7 @@ export default function PublicResponse() {
                         }
                       />
                       {errors.name && (
-                        <div className="flex items-center gap-2 mt-2 text-sm text-destructive">
+                        <div className="flex items-center gap-2 mt-2 text-xs sm:text-sm text-destructive">
                           <span className="w-1.5 h-1.5 rounded-full bg-destructive"></span>
                           <span>
                             Name is required for personalized guidance
@@ -465,7 +464,7 @@ export default function PublicResponse() {
                       )}
                     </div>
 
-                    <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-2 sm:px-3 py-1 text-xs text-primary">
                       <Shield className="w-3 h-3" />
                       <span>Private & Confidential</span>
                     </div>
@@ -476,63 +475,7 @@ export default function PublicResponse() {
           </motion.div>
 
           {/* Islamic Oath & Privacy */}
-          {set.requireAttestation && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 via-background to-emerald-50 border border-amber-200/50 p-6 shadow-lg">
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-emerald-500/5" />
-                <div className="relative">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700 mt-1">
-                      <Shield className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-3">
-                        <h3 className="font-semibold text-amber-900">
-                          Islamic Oath
-                        </h3>
-                        <div className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-2 py-1 text-xs text-amber-800">
-                          <Sparkles className="w-3 h-3" />
-                          Sacred Commitment
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <Label
-                          htmlFor="attestation"
-                          className="font-serif text-base leading-relaxed text-amber-900 cursor-pointer block"
-                        >
-                          <Checkbox
-                            id="attestation"
-                            {...register("attestation", { required: true })}
-                            className="mr-3 border-amber-400 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-                          />
-                          "{t("response.attestation")}"
-                        </Label>
-
-                        <div className="text-sm text-amber-800/80 leading-relaxed">
-                          <p className="mb-2">
-                            <strong>Privacy & Trust:</strong> Your responses are
-                            handled with Islamic principles of Amanah (trust)
-                            and will only be shared with appropriate marriage
-                            guidance.
-                          </p>
-                          <p className="text-xs text-amber-700">
-                            By submitting, you affirm that all information
-                            provided is truthful and intended for Islamic
-                            marriage guidance only.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
+          {/* Islamic Oath moved before submit button, privacy/trust and title removed */}
 
           {/* Dua Section */}
           <motion.div
@@ -540,30 +483,30 @@ export default function PublicResponse() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 via-background to-primary/5 border border-emerald-200/50 p-6 shadow-lg">
+            <div className="relative overflow-hidden rounded-lg sm:rounded-2xl bg-gradient-to-br from-emerald-50 via-background to-primary/5 border border-emerald-200/50 p-3 sm:p-6 shadow-lg">
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-primary/5" />
               <div className="relative">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-4">
+                  <div className="hidden sm:flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 mb-2 sm:mb-0">
                     <Heart className="h-5 w-5" />
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-3">
-                      <h3 className="font-semibold text-emerald-900">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+                      <h3 className="font-semibold text-emerald-900 text-base sm:text-lg">
                         Dua for Guidance
                       </h3>
-                      <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-2 py-1 text-xs text-emerald-800">
+                      <div className="inline-flex items-center gap-1 sm:gap-2 rounded-full bg-emerald-100 px-2 py-0.5 sm:py-1 text-xs text-emerald-800 mt-1 sm:mt-0">
                         <Crown className="w-3 h-3" />
                         Islamic Prayer
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <blockquote className="text-emerald-900 font-serif text-base leading-relaxed border-l-4 border-emerald-400 pl-4 italic">
+                    <div className="space-y-2 sm:space-y-3">
+                      <blockquote className="text-emerald-900 font-serif text-sm sm:text-base leading-relaxed border-l-4 border-emerald-400 pl-3 sm:pl-4 italic">
                         "رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا
                         قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا"
                       </blockquote>
-                      <p className="text-sm text-emerald-800/80">
+                      <p className="text-xs sm:text-sm text-emerald-800/80">
                         <strong>Translation:</strong> "Our Lord, grant us from
                         among our spouses and offspring comfort to our eyes and
                         make us a leader for the righteous." (Surah Al-Furqan:
@@ -581,7 +524,7 @@ export default function PublicResponse() {
           </motion.div>
 
           {/* Questions - Compact Design */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {set.questions.map((question: any, idx: number) => (
               <motion.div
                 key={question.id}
@@ -589,19 +532,19 @@ export default function PublicResponse() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 + idx * 0.05 }}
               >
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-white/90 via-background to-white/70 border border-border/40 p-4 shadow-md backdrop-blur-sm">
+                <div className="relative overflow-hidden rounded-lg sm:rounded-xl bg-gradient-to-br from-white/90 via-background to-white/70 border border-border/40 p-3 sm:p-4 shadow-md backdrop-blur-sm">
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/3 to-transparent" />
 
-                  <div className="relative space-y-3">
-                    <div className="flex items-start gap-3">
+                  <div className="relative space-y-2 sm:space-y-3">
+                    <div className="flex items-start gap-2 sm:gap-3">
                       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-primary font-semibold text-xs flex-shrink-0 mt-0.5">
                         {idx + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <Label className="text-base font-medium block text-foreground leading-snug">
+                        <Label className="text-sm sm:text-base font-medium block text-foreground leading-snug">
                           {question.prompt}
                           {question.required && (
-                            <span className="text-destructive ml-1.5 text-sm">
+                            <span className="text-destructive ml-1.5 text-xs sm:text-sm">
                               *
                             </span>
                           )}
@@ -616,7 +559,7 @@ export default function PublicResponse() {
                       {...register(`question_${question.id}`, {
                         required: question.required,
                       })}
-                      className="min-h-[80px] max-h-[120px] resize-none bg-background/70 border-border/50 focus:border-primary/40 focus:ring-primary/10 text-sm"
+                      className="min-h-[64px] sm:min-h-[80px] max-h-[120px] resize-none bg-background/70 border-border/50 focus:border-primary/40 focus:ring-primary/10 text-xs sm:text-sm"
                       placeholder="Share your thoughts here..."
                     />
                     {errors[`question_${question.id}`] && (
@@ -632,20 +575,48 @@ export default function PublicResponse() {
           </div>
 
           {/* Submit Section */}
+          {set.requireAttestation && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 + set.questions.length * 0.1 }}
+              className="pt-4"
+            >
+              <div className="relative overflow-hidden rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-50 via-background to-emerald-50 border border-amber-200/50 p-3 sm:p-4 shadow-lg mb-4">
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-emerald-500/5" />
+                <div className="relative">
+                  <Label
+                    htmlFor="attestation"
+                    className="font-serif text-sm sm:text-base leading-relaxed text-amber-900 cursor-pointer block"
+                  >
+                    <Checkbox
+                      id="attestation"
+                      {...register("attestation", { required: true })}
+                      className="mr-2 sm:mr-3 border-amber-400 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                    />
+                    "{t("response.attestation")}" 
+                  </Label>
+                  <p className="text-xs text-amber-700 mt-2">
+                    By submitting, you affirm that all information provided is truthful and intended for Islamic marriage guidance only.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 + set.questions.length * 0.1 }}
-            className="pt-8 pb-16"
+            transition={{ delay: 0.81 + set.questions.length * 0.1 }}
+            className="pt-2 sm:pt-8 pb-20"
           >
-            <div className="bg-muted/30 border border-border/40 rounded-xl p-6">
+            <div className="bg-muted/30 border border-border/40 rounded-lg sm:rounded-xl p-4 sm:p-6">
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
                   <div>
-                    <h3 className="text-xl font-semibold text-foreground">
+                    <h3 className="text-lg sm:text-xl font-semibold text-foreground">
                       Ready to Submit?
                     </h3>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       You can submit this form only once.
                     </p>
                   </div>
@@ -653,7 +624,7 @@ export default function PublicResponse() {
                   <Button
                     type="submit"
                     size="lg"
-                    className="h-12 px-8 rounded-lg bg-primary hover:bg-primary/90 text-base font-medium"
+                    className="h-10 sm:h-12 px-6 sm:px-8 rounded-lg bg-primary hover:bg-primary/90 text-base font-medium w-full sm:w-auto mt-3 sm:mt-0"
                     disabled={
                       submitResponse.isPending ||
                       (set.requireAttestation && !attestationChecked)
@@ -669,18 +640,16 @@ export default function PublicResponse() {
                 </div>
 
                 {set.requireAttestation && !attestationChecked && (
-                  <div className="flex items-center gap-2 text-sm text-amber-600 mt-3">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-amber-600 mt-3">
                     <Shield className="w-4 h-4" />
                     <span>
-                      Please accept the Islamic oath above to submit your
-                      responses.
+                      Please accept the Islamic oath above to submit your responses.
                     </span>
                   </div>
                 )}
 
-                <p className="text-sm text-muted-foreground mt-2">
-                  Your information is handled with Islamic principles of trust
-                  and privacy.
+                <p className="text-xs sm:text-sm text-muted-foreground mt-2">
+                  Your information is handled with Islamic principles of trust and privacy.
                 </p>
               </div>
             </div>
