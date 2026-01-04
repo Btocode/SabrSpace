@@ -209,62 +209,58 @@ export function CreateSetForm({ setCreatedSetUrl, createdSetUrl }: { setCreatedS
 
   if (url) {
     return (
-      <div className="max-w-lg w-full mx-auto px-2 sm:px-0">
-        <Card className="shadow-xl border-border/50">
-          <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4 sm:mb-6 mx-auto">
-              <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-4 text-primary font-serif">{t("set.savePrompt")}</h3>
-            <p className="text-muted-foreground mb-4 sm:mb-6 text-base sm:text-lg">
-              {t("set.saveDesc")}
-            </p>
-            <div className="bg-primary/5 p-4 sm:p-6 rounded-xl mb-4 sm:mb-6 border border-primary/20 w-full">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-3">
-                <Share2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                <span className="font-medium text-base sm:text-lg text-primary font-serif">Share Link</span>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full">
-                <Input
-                  value={url}
-                  readOnly
-                  className="flex-1 font-mono text-sm sm:text-base bg-white/50 border-border/50"
-                />
-                <Button
-                  onClick={() => {
-                    navigator.clipboard.writeText(url);
-                    addToast({
-                      type: "success",
-                      title: "Copied!",
-                      description: t("set.copied"),
-                      duration: 2000
-                    });
-                  }}
-                  className="rounded-full px-4 sm:px-6 shadow-lg shadow-primary/20 w-full sm:w-auto"
-                  size="lg"
-                >
-                  <Copy className="w-5 h-5 mr-2" />
-                  Copy
-                </Button>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full justify-center">
-              <Button
-                onClick={() => setLocation("/dashboard")}
-                variant="outline"
-                className="rounded-full px-4 py-3 w-full sm:w-auto"
-              >
-                Go to Dashboard
-              </Button>
-              <Button
-                onClick={() => setLocation("/create")}
-                className="rounded-full px-4 py-3 shadow-lg shadow-primary/20 w-full sm:w-auto"
-              >
-                Create Another Set
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="max-w-lg w-full mx-auto px-2 sm:px-0 flex flex-col items-center justify-center py-12">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4 sm:mb-6">
+          <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+        </div>
+        <h3 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-4 text-primary font-serif text-center">{t("set.savePrompt")}</h3>
+        <p className="text-muted-foreground mb-4 sm:mb-6 text-base sm:text-lg text-center">
+          {t("set.saveDesc")}
+        </p>
+        <div className="bg-primary/5 p-4 sm:p-6 rounded-xl mb-4 sm:mb-6 border border-primary/20 w-full flex flex-col items-center">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-3">
+            <Share2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+            <span className="font-medium text-base sm:text-lg text-primary font-serif">Share Link</span>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full">
+            <Input
+              value={url}
+              readOnly
+              className="flex-1 font-mono text-sm sm:text-base bg-white/50 border-border/50"
+            />
+            <Button
+              onClick={() => {
+                navigator.clipboard.writeText(url);
+                addToast({
+                  type: "success",
+                  title: "Copied!",
+                  description: t("set.copied"),
+                  duration: 2000
+                });
+              }}
+              className="rounded-full px-4 sm:px-6 shadow-lg shadow-primary/20 w-full sm:w-auto"
+              size="lg"
+            >
+              <Copy className="w-5 h-5 mr-2" />
+              Copy
+            </Button>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full justify-center">
+          <Button
+            onClick={() => setLocation("/dashboard")}
+            variant="outline"
+            className="rounded-full px-4 py-3 w-full sm:w-auto"
+          >
+            Go to Dashboard
+          </Button>
+          <Button
+            onClick={() => setLocation("/create")}
+            className="rounded-full px-4 py-3 shadow-lg shadow-primary/20 w-full sm:w-auto"
+          >
+            Create Another Set
+          </Button>
+        </div>
       </div>
     );
   }

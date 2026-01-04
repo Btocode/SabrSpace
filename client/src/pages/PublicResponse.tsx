@@ -265,7 +265,7 @@ export default function PublicResponse() {
           transition={{ duration: 0.6 }}
           className="mb-6 sm:mb-8"
         >
-          <Bismillah className="mb-4 sm:mb-6 opacity-80" />
+          <Bismillah className="mb-3 sm:mb-6 opacity-80 text-2xl sm:text-3xl" />
 
           {/* Reorganized Left-Aligned Hero Header */}
           <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/8 via-background to-amber-500/8 border border-primary/15 p-4 sm:p-6 shadow-lg">
@@ -419,7 +419,8 @@ export default function PublicResponse() {
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent" />
               <div className="relative">
                 <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary mb-2 sm:mb-0">
+                  {/* User avatar removed on mobile */}
+                  <div className="hidden sm:flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary mb-2 sm:mb-0">
                     <User className="h-5 w-5" />
                   </div>
                   <div className="flex-1 space-y-2 sm:space-y-3">
